@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>竹芝体験アンケート</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">竹芝体験アンケート</h1>
+            <p class="subtitle">あなたの体験を俳句に変えます</p>
+        </header>
+        
+        <main class="main">
+            <div class="survey-container">
+                <form id="survey-form" class="survey-form">
+                    <div class="form-group">
+                        <label for="purpose">あなたは何をしに竹芝に来ましたか？</label>
+                        <select id="purpose" name="purpose" required>
+                            <option value="">選択してください</option>
+                            <option value="work">仕事・通勤</option>
+                            <option value="leisure">レジャー・観光</option>
+                            <option value="shopping">買い物</option>
+                            <option value="dining">食事</option>
+                            <option value="meeting">会議・打ち合わせ</option>
+                            <option value="exercise">運動・散歩</option>
+                            <option value="other">その他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="mood">あなたの今の気分は？</label>
+                        <div class="mood-options">
+                            <label class="mood-option">
+                                <input type="radio" name="mood" value="happy" required>
+                                <span class="mood-emoji">😊</span>
+                                <span class="mood-text">嬉しい・楽しい</span>
+                            </label>
+                            <label class="mood-option">
+                                <input type="radio" name="mood" value="peaceful" required>
+                                <span class="mood-emoji">😌</span>
+                                <span class="mood-text">穏やか・落ち着いている</span>
+                            </label>
+                            <label class="mood-option">
+                                <input type="radio" name="mood" value="excited" required>
+                                <span class="mood-emoji">🤩</span>
+                                <span class="mood-text">ワクワク・興奮している</span>
+                            </label>
+                            <label class="mood-option">
+                                <input type="radio" name="mood" value="contemplative" required>
+                                <span class="mood-emoji">🤔</span>
+                                <span class="mood-text">考え深い・静寂</span>
+                            </label>
+                            <label class="mood-option">
+                                <input type="radio" name="mood" value="nostalgic" required>
+                                <span class="mood-emoji">😌</span>
+                                <span class="mood-text">懐かしい・郷愁</span>
+                            </label>
+                            <label class="mood-option">
+                                <input type="radio" name="mood" value="energetic" required>
+                                <span class="mood-emoji">💪</span>
+                                <span class="mood-text">元気・活発</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reason">なぜその気分なのですか？</label>
+                        <textarea id="reason" name="reason" placeholder="その気分になった理由を教えてください..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="location">現在いる場所は？</label>
+                        <select id="location" name="location">
+                            <option value="">選択してください</option>
+                            <option value="takeshiba-station">竹芝駅</option>
+                            <option value="takeshiba-pier">竹芝桟橋</option>
+                            <option value="takeshiba-park">竹芝公園</option>
+                            <option value="takeshiba-building">竹芝ビル</option>
+                            <option value="other">その他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn" id="submit-btn">
+                            <span class="btn-text">俳句を生成する</span>
+                            <span class="btn-loading" style="display: none;">俳句生成中...</span>
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="result-section" class="result-section" style="display: none;">
+                    <div class="haiku-result">
+                        <h3>あなたの俳句</h3>
+                        <div class="haiku-display" id="haiku-display"></div>
+                        <div class="haiku-info">
+                            <p>🎋 あなたの体験が俳句になりました</p>
+                            <p class="note">竹芝エリアでの体験を俳句として記録しました</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/survey.js"></script>
+</body>
+</html>

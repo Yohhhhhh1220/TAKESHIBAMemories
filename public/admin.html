@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理者ダッシュボード - TAKESHIBA Memories</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .admin-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+        }
+        
+        .admin-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .admin-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .stats-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .stats-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-weight: 400;
+        }
+        
+        .mood-stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .mood-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .mood-count {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(231, 76, 60, 0.2);
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .back-link:hover {
+            color: #5a6fd8;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <a href="/" class="back-link">← メインページに戻る</a>
+        
+        <div class="admin-header">
+            <h1 class="admin-title">管理者ダッシュボード</h1>
+            <p class="admin-subtitle">TAKESHIBA Memories 統計情報</p>
+        </div>
+        
+        <button class="refresh-btn" onclick="loadMoodStats()">統計を更新</button>
+        
+        <div class="stats-grid">
+            <div class="stats-card">
+                <h3>📊 感情選択統計</h3>
+                <div id="mood-stats-container">
+                    <div class="loading">読み込み中...</div>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <h3>📈 リアルタイム情報</h3>
+                <div id="realtime-info">
+                    <p><strong>最終更新:</strong> <span id="last-update">-</span></p>
+                    <p><strong>総選択回数:</strong> <span id="total-selections">-</span></p>
+                    <p><strong>人気の感情:</strong> <span id="popular-mood">-</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 感情名の日本語マッピング
+        const moodNames = {
+            'exhilarated': '高揚している',
+            'excited': 'わくわくする',
+            'inspired': '刺激的だ',
+            'joyful': '楽しい',
+            'calm': '穏やか',
+            'relaxed': 'リラックス',
+            'content': '満たされている',
+            'hopeful': '前向きな気分',
+            'melancholy': '憂鬱だ',
+            'lonely': '孤独を感じる',
+            'tired': '疲れている',
+            'apathetic': '無気力だ',
+            'anxious': '焦っている',
+            'tense': '緊張している',
+            'irritated': 'いらいらする',
+            'surprised': '驚いている'
+        };
+        
+        // ページ読み込み時に統計を取得
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMoodStats();
+        });
+        
+        // 感情選択統計を読み込み
+        async function loadMoodStats() {
+            try {
+                const response = await fetch('/api/admin/mood-stats');
+                const data = await response.json();
+                
+                if (data.moodStats) {
+                    displayMoodStats(data.moodStats);
+                    updateRealtimeInfo(data.moodStats);
+                } else {
+                    showError('統計データの取得に失敗しました');
+                }
+            } catch (error) {
+                console.error('統計取得エラー:', error);
+                showError('統計データの取得中にエラーが発生しました');
+            }
+        }
+        
+        // 感情統計を表示
+        function displayMoodStats(moodStats) {
+            const container = document.getElementById('mood-stats-container');
+            
+            if (moodStats.length === 0) {
+                container.innerHTML = '<p>まだデータがありません</p>';
+                return;
+            }
+            
+            let html = '';
+            moodStats.forEach(stat => {
+                const moodName = moodNames[stat.mood] || stat.mood;
+                html += `
+                    <div class="mood-stat-item">
+                        <span class="mood-name">${moodName}</span>
+                        <span class="mood-count">${stat.count}回</span>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // リアルタイム情報を更新
+        function updateRealtimeInfo(moodStats) {
+            const totalSelections = moodStats.reduce((sum, stat) => sum + stat.count, 0);
+            const popularMood = moodStats.length > 0 ? moodNames[moodStats[0].mood] || moodStats[0].mood : '-';
+            
+            document.getElementById('last-update').textContent = new Date().toLocaleString('ja-JP');
+            document.getElementById('total-selections').textContent = totalSelections + '回';
+            document.getElementById('popular-mood').textContent = popularMood;
+        }
+        
+        // エラー表示
+        function showError(message) {
+            document.getElementById('mood-stats-container').innerHTML = 
+                `<div class="error">${message}</div>`;
+        }
+        
+        // 5分ごとに自動更新
+        setInterval(loadMoodStats, 300000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>俳句表示 - 竹芝俳句音楽システム</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">あなたの俳句</h1>
+        </header>
+        
+        <main class="main">
+            <div class="haiku-display-container">
+                <div class="haiku-card" id="haiku-card">
+                    <div class="haiku-text" id="haiku-text">
+                        読み込み中...
+                    </div>
+                    <div class="haiku-meta">
+                        <div class="timestamp" id="timestamp"></div>
+                        <div class="location" id="location"></div>
+                    </div>
+                </div>
+                
+                <div class="haiku-info-section">
+                    <h3>俳句について</h3>
+                    <div class="haiku-info">
+                        <p>🎋 この俳句はあなたの竹芝エリアでの体験を基に生成されました</p>
+                        <p>AIがあなたの気分や目的を理解し、その場所の雰囲気と合わせて俳句を作成しました</p>
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button class="action-btn" id="share-btn">共有する</button>
+                    <button class="action-btn" id="new-survey-btn">新しいアンケート</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="haiku.js"></script>
+</body>
+</html>

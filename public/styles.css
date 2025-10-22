@@ -1,0 +1,919 @@
+/* 基本スタイル */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Noto Sans JP', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: #f8f6f0;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* 圓光寺風のテクスチャ背景 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0;
+    position: relative;
+}
+
+/* 圓光寺風ヘッダー */
+.header {
+    text-align: center;
+    margin-bottom: 80px;
+    padding: 60px 20px;
+    position: relative;
+    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,246,240,0.9) 100%);
+    backdrop-filter: blur(10px);
+    border-radius: 0 0 30px 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.title {
+    font-size: 3.5rem;
+    font-weight: 300;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    letter-spacing: 0.1em;
+    position: relative;
+}
+
+.title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 1px;
+}
+
+.subtitle {
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: #7f8c8d;
+    letter-spacing: 0.05em;
+}
+
+/* 圓光寺風メインコンテンツ */
+.main {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 30px;
+    padding: 60px 40px;
+    box-shadow: 
+        0 20px 60px rgba(0,0,0,0.1),
+        0 0 0 1px rgba(255,255,255,0.2);
+    margin-bottom: 60px;
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+}
+
+.main::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
+}
+
+/* 圓光寺風ウェルカムセクション */
+.welcome-section {
+    margin-bottom: 80px;
+    text-align: center;
+}
+
+.welcome-card {
+    margin-bottom: 60px;
+    position: relative;
+}
+
+.welcome-card h2 {
+    font-size: 2.8rem;
+    margin-bottom: 30px;
+    color: #2c3e50;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    position: relative;
+}
+
+.welcome-card h2::before {
+    content: '🎋';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.5rem;
+    opacity: 0.7;
+}
+
+.welcome-card p {
+    font-size: 1.3rem;
+    color: #7f8c8d;
+    margin-bottom: 40px;
+    line-height: 1.8;
+    letter-spacing: 0.02em;
+}
+
+/* 圓光寺風機能カード */
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    margin-top: 60px;
+}
+
+.feature {
+    text-align: center;
+    padding: 40px 30px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 25px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.feature::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.feature:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.feature:hover::before {
+    transform: scaleX(1);
+}
+
+.feature-icon {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    display: block;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+}
+
+.feature h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: #2c3e50;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+}
+
+.feature p {
+    color: #7f8c8d;
+    font-size: 1rem;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+}
+
+/* 場所セクション */
+.location-section h2 {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+    color: #333;
+    text-align: center;
+}
+
+.location-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.location-card {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.location-card:hover {
+    transform: translateY(-3px);
+    border-color: #667eea;
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+}
+
+.location-card h3 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.location-card p {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.qr-placeholder {
+    background: #e9ecef;
+    padding: 20px;
+    border-radius: 10px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* 圓光寺風アンケートフォーム */
+.survey-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.survey-form {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 60px 50px;
+    border-radius: 30px;
+    margin-bottom: 40px;
+    box-shadow: 
+        0 20px 40px rgba(0,0,0,0.1),
+        0 0 0 1px rgba(255,255,255,0.2);
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+}
+
+.survey-form::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.form-group {
+    margin-bottom: 30px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 400;
+    margin-bottom: 15px;
+    color: #2c3e50;
+    font-size: 1.2rem;
+    letter-spacing: 0.02em;
+}
+
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 20px;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 15px;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    color: #2c3e50;
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: translateY(-2px);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* 気分選択 */
+.mood-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.mood-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 15px;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    min-height: 100px;
+}
+
+.mood-option:hover {
+    border-color: #667eea;
+    background: #f8f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+}
+
+.mood-option.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.mood-option.selected .mood-emoji {
+    transform: scale(1.1);
+}
+
+.mood-emoji {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    transition: transform 0.3s ease;
+}
+
+.mood-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+/* 圓光寺風ボタン */
+.submit-btn {
+    width: 100%;
+    padding: 25px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 1.3rem;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.02em;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+}
+
+.submit-btn:hover::before {
+    left: 100%;
+}
+
+.submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+}
+
+/* 圓光寺風結果セクション */
+.result-section {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 60px 50px;
+    border-radius: 30px;
+    text-align: center;
+    box-shadow: 
+        0 20px 40px rgba(0,0,0,0.1),
+        0 0 0 1px rgba(255,255,255,0.2);
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+}
+
+.result-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.haiku-result h3 {
+    font-size: 2rem;
+    margin-bottom: 40px;
+    color: #2c3e50;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+}
+
+.haiku-display {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 60px 50px;
+    border-radius: 25px;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.haiku-text {
+    font-size: 2.2rem;
+    line-height: 2.5;
+    color: #2c3e50;
+    font-weight: 300;
+    white-space: pre-line;
+    letter-spacing: 0.05em;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.music-player {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-top: 20px;
+}
+
+.music-info {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* 圓光寺風俳句表示 */
+.haiku-display-container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.haiku-card {
+    background: rgba(255, 255, 255, 0.95);
+    color: #2c3e50;
+    padding: 80px 60px;
+    border-radius: 30px;
+    margin-bottom: 60px;
+    box-shadow: 
+        0 30px 60px rgba(0,0,0,0.1),
+        0 0 0 1px rgba(255,255,255,0.2);
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.haiku-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.haiku-text {
+    font-size: 2.5rem;
+    line-height: 2.8;
+    font-weight: 300;
+    white-space: pre-line;
+    margin-bottom: 40px;
+    letter-spacing: 0.05em;
+    color: #2c3e50;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.haiku-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.music-section {
+    background: #f8f9fa;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+.music-section h3 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.action-btn {
+    padding: 15px 30px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.action-btn:hover {
+    background: #5a6fd8;
+}
+
+/* 俳句一覧 */
+.haiku-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.haiku-item {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.haiku-item .haiku-text {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.haiku-item .haiku-meta {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* 圓光寺風フッター */
+.footer {
+    text-align: center;
+    color: #7f8c8d;
+    margin-top: 80px;
+    padding: 40px 20px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    border-radius: 30px 30px 0 0;
+    border-top: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.footer p {
+    margin-bottom: 10px;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    line-height: 1.6;
+}
+
+/* レスポンシブ */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .main {
+        padding: 20px;
+    }
+    
+    .title {
+        font-size: 2rem;
+    }
+    
+    .features {
+        grid-template-columns: 1fr;
+    }
+    
+    .location-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .mood-options {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        max-width: 100%;
+    }
+    
+    .mood-option {
+        min-height: 80px;
+        padding: 15px 10px;
+    }
+    
+    .mood-emoji {
+        font-size: 1.5rem;
+    }
+    
+    .mood-text {
+        font-size: 0.8rem;
+    }
+    
+    .actions {
+        flex-direction: column;
+    }
+    
+    .haiku-text {
+        font-size: 1.3rem;
+    }
+}
+
+/* 圓光寺風アニメーション */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.haiku-display,
+.haiku-card {
+    animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feature:nth-child(odd) {
+    animation: slideInFromLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feature:nth-child(even) {
+    animation: slideInFromRight 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 統合ページ用スタイル */
+.haiku-generation-section {
+    margin-bottom: 80px;
+}
+
+.haiku-gallery-section {
+    margin-bottom: 40px;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.section-header h2 {
+    font-size: 2.2rem;
+    margin-bottom: 15px;
+    color: #2c3e50;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+}
+
+.section-header p {
+    font-size: 1.2rem;
+    color: #7f8c8d;
+    letter-spacing: 0.02em;
+}
+
+/* 俳句フィルター */
+.haiku-filters {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 25px;
+    color: #667eea;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.filter-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: #667eea;
+    transform: translateY(-2px);
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* 俳句ギャラリー */
+.haiku-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.haiku-item {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 40px 30px;
+    border-radius: 25px;
+    text-align: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.haiku-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.haiku-item:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.haiku-item:hover::before {
+    transform: scaleX(1);
+}
+
+.haiku-item .haiku-text {
+    font-size: 1.4rem;
+    line-height: 2.2;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    white-space: pre-line;
+}
+
+.haiku-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-top: 20px;
+}
+
+.haiku-location {
+    font-weight: 500;
+    color: #667eea;
+}
+
+.haiku-timestamp {
+    opacity: 0.8;
+}
+
+/* 俳句アクション */
+.haiku-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.haiku-actions .action-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.haiku-actions .action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* ローディングインジケーター */
+.loading-indicator {
+    text-align: center;
+    padding: 40px;
+}
+
+.spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+.error-message {
+    text-align: center;
+    color: #e74c3c;
+    font-size: 1.1rem;
+    padding: 40px;
+    background: rgba(231, 76, 60, 0.1);
+    border-radius: 15px;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+.no-haikus {
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 1.2rem;
+    padding: 60px 40px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    border: 2px dashed rgba(102, 126, 234, 0.3);
+}
+
+/* ローディング */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
