@@ -17,7 +17,7 @@
 ## 技術スタック
 
 - **バックエンド**: Node.js, Express.js
-- **データベース**: SQLite3
+- **データベース**: PostgreSQL (@vercel/postgres)
 - **リアルタイム通信**: Socket.IO
 - **AI API**: OpenAI ChatGPT API
 - **音楽生成**: Google MusicFX API

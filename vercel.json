@@ -39,5 +39,6 @@
     "server.js": {
       "maxDuration": 30
     }
-  }
+  },
+  "regions": ["nrt1"]
 }

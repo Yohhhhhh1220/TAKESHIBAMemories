@@ -28,12 +28,14 @@ router.post('/survey', async (req, res) => {
       haiku
     });
     
-    // リアルタイムで俳句を配信
+    // リアルタイムで俳句を配信（開発環境のみ）
     const io = req.app.get('io');
-    io.to(`location-${locationId}`).emit('new-haiku', {
-      haiku,
-      timestamp: new Date()
-    });
+    if (io) {
+      io.to(`location-${locationId}`).emit('new-haiku', {
+        haiku,
+        timestamp: new Date()
+      });
+    }
     
   } catch (error) {
     console.error('アンケート処理エラー:', error);
@@ -65,7 +67,7 @@ router.get('/haiku/:id', async (req, res) => {
 router.get('/location/:locationId/haikus', async (req, res) => {
   try {
     const { locationId } = req.params;
-    const { getHaikusByLocation } = require('../services/databaseService');
+    const { getHaikusByLocation } = require('../services/postgresService');
     const haikus = await getHaikusByLocation(locationId);
     res.json({ haikus });
   } catch (error) {

@@ -1,5 +1,5 @@
 const { generateMultipleQRCodes } = require('../services/qrService');
-const { saveLocation } = require('../services/databaseService');
+const { saveLocation } = require('../services/postgresService');
 
 // 竹芝エリアの場所データ
 const locations = [

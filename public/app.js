@@ -1,6 +1,10 @@
 // 統合ページのJavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    const socket = io();
+    // Socket.IO接続（開発環境のみ）
+    let socket;
+    if (typeof io !== 'undefined') {
+        socket = io();
+    }
     
     // フォーム要素の取得
     const form = document.getElementById('survey-form');
@@ -24,10 +28,12 @@ document.addEventListener('DOMContentLoaded', function() {
     setupMoodSelection();
     handleLocationParameter();
     
-    // Socket.IOでリアルタイム俳句を受信
-    socket.on('new-haiku', function(data) {
-        addHaikuToGallery(data);
-    });
+    // Socket.IOでリアルタイム俳句を受信（開発環境のみ）
+    if (socket) {
+        socket.on('new-haiku', function(data) {
+            addHaikuToGallery(data);
+        });
+    }
     
     // 定期的に俳句一覧を更新
     setInterval(loadHaikuGallery, 30000); // 30秒ごと

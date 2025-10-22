@@ -10,12 +10,17 @@ const { initializeDatabase } = require('./services/postgresService');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
-});
+
+// Socket.IOは本番環境では無効化（Vercelでは制限あり）
+let io;
+if (process.env.NODE_ENV !== 'production') {
+  io = socketIo(server, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    }
+  });
+}
 
 // ミドルウェア設定
 app.use(cors());
@@ -51,22 +56,24 @@ app.get('/qr-codes', (req, res) => {
 app.use('/api', require('./routes/api'));
 app.use('/api/admin', require('./routes/admin'));
 
-// Socket.IO接続処理
-io.on('connection', (socket) => {
-  console.log('ユーザーが接続しました:', socket.id);
-  
-  socket.on('join-location', (locationId) => {
-    socket.join(`location-${locationId}`);
-    console.log(`ユーザー ${socket.id} が場所 ${locationId} に参加しました`);
+// Socket.IO接続処理（開発環境のみ）
+if (io) {
+  io.on('connection', (socket) => {
+    console.log('ユーザーが接続しました:', socket.id);
+    
+    socket.on('join-location', (locationId) => {
+      socket.join(`location-${locationId}`);
+      console.log(`ユーザー ${socket.id} が場所 ${locationId} に参加しました`);
+    });
+    
+    socket.on('disconnect', () => {
+      console.log('ユーザーが切断しました:', socket.id);
+    });
   });
-  
-  socket.on('disconnect', () => {
-    console.log('ユーザーが切断しました:', socket.id);
-  });
-});
 
-// グローバルにioを利用可能にする
-app.set('io', io);
+  // グローバルにioを利用可能にする
+  app.set('io', io);
+}
 
 // データベース初期化
 initializeDatabase().catch(console.error);
