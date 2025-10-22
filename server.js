@@ -5,6 +5,9 @@ const http = require('http');
 const socketIo = require('socket.io');
 require('dotenv').config();
 
+// PostgreSQLデータベース初期化
+const { initializeDatabase } = require('./services/postgresService');
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -64,6 +67,9 @@ io.on('connection', (socket) => {
 
 // グローバルにioを利用可能にする
 app.set('io', io);
+
+// データベース初期化
+initializeDatabase().catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

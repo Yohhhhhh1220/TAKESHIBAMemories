@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { generateHaiku } = require('../services/haikuService');
-const { saveSurvey, getSurvey, updateSurveyWithHaiku, recordMoodSelection, getMoodStats } = require('../services/databaseService');
+const { saveSurvey, getSurvey, updateSurveyWithHaiku, recordMoodSelection, getMoodStats } = require('../services/postgresService');
 const { generateLocationQRCodes, generateMainQRCode } = require('../services/qrService');
 
 // アンケート送信API
@@ -77,7 +77,7 @@ router.get('/location/:locationId/haikus', async (req, res) => {
 // 全俳句一覧取得API（フィルター用）
 router.get('/haikus', async (req, res) => {
   try {
-    const { getAllHaikus } = require('../services/databaseService');
+    const { getAllHaikus } = require('../services/postgresService');
     const haikus = await getAllHaikus();
     res.json({ haikus });
   } catch (error) {

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { generateQRCode, generateMultipleQRCodes, getQRCodes, deleteQRCode } = require('../services/qrService');
-const { saveLocation } = require('../services/databaseService');
+const { saveLocation } = require('../services/postgresService');
 const musicStreamService = require('../services/musicStreamService');
 
 // QRコード生成API
