@@ -29,9 +29,10 @@ NODE_ENV=production
 1. GitHubリポジトリをVercelに接続
 2. プロジェクト設定で以下を確認：
    - **Framework Preset**: Other
-   - **Build Command**: `npm run vercel-build`
+   - **Build Command**: `npm install && npm run vercel-build`
    - **Output Directory**: 空白
    - **Install Command**: `npm install`
+3. **重要**: 初回デプロイ前に「Redeploy」を実行してキャッシュをクリア
 
 ### 5. カスタムドメイン（オプション）
 
@@ -96,15 +97,20 @@ NODE_ENV=production
 
 ### よくある問題
 
-1. **データベース接続エラー**
+1. **SQLite3 モジュールエラー**
+   - Vercelダッシュボードで「Redeploy」を実行
+   - プロジェクト設定で「Clear Cache」を有効化
+   - ローカルで `npm run clean` を実行してから再デプロイ
+
+2. **データベース接続エラー**
    - VercelダッシュボードでPostgreSQLが正しく設定されているか確認
    - 環境変数が正しく設定されているか確認
 
-2. **OpenAI API エラー**
+3. **OpenAI API エラー**
    - APIキーが正しく設定されているか確認
    - クレジット残高を確認
 
-3. **QRコード生成エラー**
+4. **QRコード生成エラー**
    - ファイル書き込み権限を確認
    - ストレージ容量を確認
 

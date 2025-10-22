@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "setup": "node scripts/setup.js",
     "init": "node scripts/init-locations.js",
-    "vercel-build": "echo 'Build completed'"
+    "vercel-build": "echo 'Build completed'",
+    "clean": "rm -rf node_modules package-lock.json && npm install"
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",
