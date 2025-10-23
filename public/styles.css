@@ -683,6 +683,12 @@ body::before {
         padding: 18px 12px;
         border-radius: 12px;
         touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        cursor: pointer;
     }
     
     .mood-emoji {
@@ -851,9 +857,25 @@ body::before {
     }
     
     .mood-option:active {
-        transform: scale(0.98);
+        transform: scale(0.95);
         background: #f8f9ff;
         border-color: #667eea;
+    }
+    
+    .mood-option {
+        min-height: 100px;
+        padding: 20px 15px;
+        position: relative;
+    }
+    
+    .mood-option::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        z-index: -1;
     }
     
     .submit-btn:hover {
