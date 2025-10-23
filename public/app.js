@@ -165,33 +165,50 @@ document.addEventListener('DOMContentLoaded', function() {
      * 気分選択の共通処理
      */
     function selectMood(option, moodOptions, moodInput) {
+        console.log('感情ボタンが押されました:', option.dataset.mood);
+        
+        // 既に選択されているボタンを再度押した場合、選択を解除
+        if (option.classList.contains('selected')) {
+            console.log('選択を解除します');
+            option.classList.remove('selected');
+            resetMoodOptionStyle(option);
+            moodInput.value = '';
+            return;
+        }
+        
         // 他の選択を解除
         moodOptions.forEach(opt => {
             opt.classList.remove('selected');
-            opt.style.transform = '';
-            opt.style.backgroundColor = '';
+            resetMoodOptionStyle(opt);
         });
         
         // この選択をアクティブに
         option.classList.add('selected');
+        console.log('選択状態を追加:', option.classList.contains('selected'));
         
         // 隠しフィールドに値を設定
         moodInput.value = option.dataset.mood;
+        console.log('選択された感情:', moodInput.value);
         
         // モバイルでの視覚的フィードバック
         if (window.innerWidth <= 768) {
             option.style.transform = 'scale(0.95)';
-            option.style.backgroundColor = '#f8f9ff';
             setTimeout(() => {
                 option.style.transform = '';
-                option.style.backgroundColor = '';
             }, 200);
         }
-        
-        // 選択されたことを視覚的に示す
-        option.style.borderColor = '#667eea';
-        option.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        option.style.color = 'white';
+    }
+    
+    /**
+     * 感情ボタンのスタイルをリセット
+     */
+    function resetMoodOptionStyle(option) {
+        // インラインスタイルをクリアしてCSSクラスに委ねる
+        option.style.transform = '';
+        option.style.backgroundColor = '';
+        option.style.borderColor = '';
+        option.style.background = '';
+        option.style.color = '';
     }
     
     /**
