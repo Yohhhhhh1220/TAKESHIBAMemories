@@ -102,16 +102,18 @@ document.addEventListener('DOMContentLoaded', function() {
         
         moodOptions.forEach(option => {
             let isTouching = false;
+            let isMouseDown = false;
             
-            // クリックイベント
+            // クリックイベント（デスクトップ用）
             option.addEventListener('click', function(e) {
-                if (!isTouching) {
+                console.log('クリックイベント:', !isTouching && !isMouseDown);
+                if (!isTouching && !isMouseDown) {
                     e.preventDefault();
                     selectMood(this, moodOptions, moodInput);
                 }
             });
             
-            // タッチ開始
+            // タッチ開始（モバイル用）
             option.addEventListener('touchstart', function(e) {
                 isTouching = true;
                 e.preventDefault();
@@ -119,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.style.backgroundColor = '#f8f9ff';
             }, { passive: false });
             
-            // タッチ終了
+            // タッチ終了（モバイル用）
             option.addEventListener('touchend', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -127,9 +129,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     selectMood(this, moodOptions, moodInput);
                 }
                 isTouching = false;
+                this.style.transform = '';
+                this.style.backgroundColor = '';
             }, { passive: false });
             
-            // タッチキャンセル
+            // タッチキャンセル（モバイル用）
             option.addEventListener('touchcancel', function(e) {
                 isTouching = false;
                 this.style.transform = '';
@@ -138,6 +142,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // マウスダウン（デスクトップ用）
             option.addEventListener('mousedown', function(e) {
+                console.log('マウスダウン');
+                isMouseDown = true;
                 e.preventDefault();
                 this.style.transform = 'scale(0.95)';
                 this.style.backgroundColor = '#f8f9ff';
@@ -145,8 +151,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // マウスアップ（デスクトップ用）
             option.addEventListener('mouseup', function(e) {
+                console.log('マウスアップ:', isMouseDown);
                 e.preventDefault();
-                selectMood(this, moodOptions, moodInput);
+                if (isMouseDown) {
+                    selectMood(this, moodOptions, moodInput);
+                }
+                isMouseDown = false;
+                this.style.transform = '';
+                this.style.backgroundColor = '';
+            });
+            
+            // マウスリーブ（デスクトップ用）
+            option.addEventListener('mouseleave', function(e) {
+                isMouseDown = false;
                 this.style.transform = '';
                 this.style.backgroundColor = '';
             });
