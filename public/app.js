@@ -101,15 +101,54 @@ document.addEventListener('DOMContentLoaded', function() {
         const moodInput = document.getElementById('mood');
         
         moodOptions.forEach(option => {
+            let isTouching = false;
+            
             // クリックイベント
-            option.addEventListener('click', function() {
-                selectMood(this, moodOptions, moodInput);
+            option.addEventListener('click', function(e) {
+                if (!isTouching) {
+                    e.preventDefault();
+                    selectMood(this, moodOptions, moodInput);
+                }
             });
             
-            // タッチイベント（モバイル最適化）
+            // タッチ開始
             option.addEventListener('touchstart', function(e) {
+                isTouching = true;
+                e.preventDefault();
+                this.style.transform = 'scale(0.95)';
+                this.style.backgroundColor = '#f8f9ff';
+            }, { passive: false });
+            
+            // タッチ終了
+            option.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isTouching) {
+                    selectMood(this, moodOptions, moodInput);
+                }
+                isTouching = false;
+            }, { passive: false });
+            
+            // タッチキャンセル
+            option.addEventListener('touchcancel', function(e) {
+                isTouching = false;
+                this.style.transform = '';
+                this.style.backgroundColor = '';
+            });
+            
+            // マウスダウン（デスクトップ用）
+            option.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                this.style.transform = 'scale(0.95)';
+                this.style.backgroundColor = '#f8f9ff';
+            });
+            
+            // マウスアップ（デスクトップ用）
+            option.addEventListener('mouseup', function(e) {
                 e.preventDefault();
                 selectMood(this, moodOptions, moodInput);
+                this.style.transform = '';
+                this.style.backgroundColor = '';
             });
             
             // キーボードアクセシビリティ
@@ -127,7 +166,11 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function selectMood(option, moodOptions, moodInput) {
         // 他の選択を解除
-        moodOptions.forEach(opt => opt.classList.remove('selected'));
+        moodOptions.forEach(opt => {
+            opt.classList.remove('selected');
+            opt.style.transform = '';
+            opt.style.backgroundColor = '';
+        });
         
         // この選択をアクティブに
         option.classList.add('selected');
@@ -138,10 +181,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // モバイルでの視覚的フィードバック
         if (window.innerWidth <= 768) {
             option.style.transform = 'scale(0.95)';
+            option.style.backgroundColor = '#f8f9ff';
             setTimeout(() => {
                 option.style.transform = '';
-            }, 150);
+                option.style.backgroundColor = '';
+            }, 200);
         }
+        
+        // 選択されたことを視覚的に示す
+        option.style.borderColor = '#667eea';
+        option.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        option.style.color = 'white';
     }
     
     /**
