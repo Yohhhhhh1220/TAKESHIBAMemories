@@ -348,6 +348,12 @@ body::before {
     background: #f8f9ff;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+    cursor: pointer;
+}
+
+.mood-option:active {
+    transform: scale(0.95);
+    background: #f0f2ff;
 }
 
 .mood-option.selected {
