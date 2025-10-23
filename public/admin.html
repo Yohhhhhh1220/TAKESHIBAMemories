@@ -13,6 +13,76 @@
             padding: 20px;
         }
         
+        /* モバイル対応 */
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 10px;
+            }
+            
+            .admin-header {
+                padding: 30px 20px;
+                border-radius: 15px;
+            }
+            
+            .admin-title {
+                font-size: 2rem;
+            }
+            
+            .admin-subtitle {
+                font-size: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .stats-card {
+                padding: 20px;
+                border-radius: 15px;
+            }
+            
+            .stats-card h3 {
+                font-size: 1.3rem;
+                margin-bottom: 15px;
+            }
+            
+            .mood-stat-item {
+                padding: 12px;
+                margin-bottom: 8px;
+            }
+            
+            .refresh-btn {
+                padding: 12px 24px;
+                font-size: 0.9rem;
+                border-radius: 20px;
+                width: 100%;
+                touch-action: manipulation;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .admin-container {
+                padding: 5px;
+            }
+            
+            .admin-header {
+                padding: 25px 15px;
+            }
+            
+            .admin-title {
+                font-size: 1.6rem;
+            }
+            
+            .stats-card {
+                padding: 15px;
+            }
+            
+            .mood-stat-item {
+                padding: 10px;
+            }
+        }
+        
         .admin-header {
             text-align: center;
             margin-bottom: 40px;

@@ -164,6 +164,100 @@
             color: #5a6fd8;
         }
         
+        /* モバイル対応 */
+        @media (max-width: 768px) {
+            .qr-container {
+                padding: 10px;
+            }
+            
+            .qr-header {
+                padding: 30px 20px;
+                border-radius: 15px;
+            }
+            
+            .qr-title {
+                font-size: 2rem;
+            }
+            
+            .qr-subtitle {
+                font-size: 1rem;
+            }
+            
+            .qr-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .qr-card {
+                padding: 20px;
+                border-radius: 15px;
+            }
+            
+            .qr-card h3 {
+                font-size: 1.3rem;
+                margin-bottom: 15px;
+            }
+            
+            .qr-image {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .generate-section {
+                padding: 20px;
+                border-radius: 15px;
+            }
+            
+            .generate-section h3 {
+                font-size: 1.3rem;
+            }
+            
+            .url-input {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+            
+            .generate-btn {
+                padding: 12px 24px;
+                font-size: 0.9rem;
+                width: 100%;
+                touch-action: manipulation;
+            }
+            
+            .qr-download {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+                touch-action: manipulation;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .qr-container {
+                padding: 5px;
+            }
+            
+            .qr-header {
+                padding: 25px 15px;
+            }
+            
+            .qr-title {
+                font-size: 1.6rem;
+            }
+            
+            .qr-card {
+                padding: 15px;
+            }
+            
+            .qr-image {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .generate-section {
+                padding: 15px;
+            }
+        }
+        
         .loading {
             text-align: center;
             padding: 40px;
