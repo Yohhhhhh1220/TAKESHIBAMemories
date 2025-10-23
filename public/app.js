@@ -101,30 +101,45 @@ document.addEventListener('DOMContentLoaded', function() {
         const moodInput = document.getElementById('mood');
         
         moodOptions.forEach(option => {
-            // シンプルなクリックイベント（全デバイス共通）
+            let isTouching = false;
+            
+            // クリックイベント（デスクトップ用）
             option.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('ボタンがクリックされました:', this.dataset.mood);
-                selectMood(this, moodOptions, moodInput);
+                if (!isTouching) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('クリックイベント:', this.dataset.mood);
+                    selectMood(this, moodOptions, moodInput);
+                }
             });
             
-            // タッチイベント（モバイル用の視覚的フィードバック）
+            // タッチイベント（モバイル用）
             option.addEventListener('touchstart', function(e) {
+                isTouching = true;
                 e.preventDefault();
                 this.style.transform = 'scale(0.95)';
                 this.style.backgroundColor = '#f8f9ff';
+                console.log('タッチ開始:', this.dataset.mood);
             }, { passive: false });
             
             option.addEventListener('touchend', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
+                console.log('タッチ終了:', this.dataset.mood);
+                // 少し遅延させてタッチイベントを確実に処理
+                setTimeout(() => {
+                    selectMood(this, moodOptions, moodInput);
+                }, 10);
+                isTouching = false;
                 this.style.transform = '';
                 this.style.backgroundColor = '';
             }, { passive: false });
             
             option.addEventListener('touchcancel', function(e) {
+                isTouching = false;
                 this.style.transform = '';
                 this.style.backgroundColor = '';
+                console.log('タッチキャンセル');
             });
             
             // マウスイベント（デスクトップ用の視覚的フィードバック）
