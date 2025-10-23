@@ -101,69 +101,46 @@ document.addEventListener('DOMContentLoaded', function() {
         const moodInput = document.getElementById('mood');
         
         moodOptions.forEach(option => {
-            let isTouching = false;
-            let isMouseDown = false;
-            
-            // クリックイベント（デスクトップ用）
+            // シンプルなクリックイベント（全デバイス共通）
             option.addEventListener('click', function(e) {
-                console.log('クリックイベント:', !isTouching && !isMouseDown);
-                if (!isTouching && !isMouseDown) {
-                    e.preventDefault();
-                    selectMood(this, moodOptions, moodInput);
-                }
-            });
-            
-            // タッチ開始（モバイル用）
-            option.addEventListener('touchstart', function(e) {
-                isTouching = true;
-                e.preventDefault();
-                this.style.transform = 'scale(0.95)';
-                this.style.backgroundColor = '#f8f9ff';
-            }, { passive: false });
-            
-            // タッチ終了（モバイル用）
-            option.addEventListener('touchend', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                if (isTouching) {
-                    selectMood(this, moodOptions, moodInput);
-                }
-                isTouching = false;
+                console.log('ボタンがクリックされました:', this.dataset.mood);
+                selectMood(this, moodOptions, moodInput);
+            });
+            
+            // タッチイベント（モバイル用の視覚的フィードバック）
+            option.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                this.style.transform = 'scale(0.95)';
+                this.style.backgroundColor = '#f8f9ff';
+            }, { passive: false });
+            
+            option.addEventListener('touchend', function(e) {
+                e.preventDefault();
                 this.style.transform = '';
                 this.style.backgroundColor = '';
             }, { passive: false });
             
-            // タッチキャンセル（モバイル用）
             option.addEventListener('touchcancel', function(e) {
-                isTouching = false;
                 this.style.transform = '';
                 this.style.backgroundColor = '';
             });
             
-            // マウスダウン（デスクトップ用）
+            // マウスイベント（デスクトップ用の視覚的フィードバック）
             option.addEventListener('mousedown', function(e) {
-                console.log('マウスダウン');
-                isMouseDown = true;
                 e.preventDefault();
                 this.style.transform = 'scale(0.95)';
                 this.style.backgroundColor = '#f8f9ff';
             });
             
-            // マウスアップ（デスクトップ用）
             option.addEventListener('mouseup', function(e) {
-                console.log('マウスアップ:', isMouseDown);
                 e.preventDefault();
-                if (isMouseDown) {
-                    selectMood(this, moodOptions, moodInput);
-                }
-                isMouseDown = false;
                 this.style.transform = '';
                 this.style.backgroundColor = '';
             });
             
-            // マウスリーブ（デスクトップ用）
             option.addEventListener('mouseleave', function(e) {
-                isMouseDown = false;
                 this.style.transform = '';
                 this.style.backgroundColor = '';
             });

@@ -360,13 +360,18 @@ body::before {
     border-color: #667eea !important;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     color: white !important;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3) !important;
 }
 
 .mood-option.selected .mood-emoji {
-    transform: scale(1.1);
+    transform: scale(1.1) !important;
 }
+
+.mood-option.selected .mood-text {
+    color: white !important;
+}
+
 
 .mood-emoji {
     font-size: 2rem;
