@@ -51,16 +51,46 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // フィルターボタン
         filterBtns.forEach(btn => {
+            // クリックイベント
             btn.addEventListener('click', function() {
-                // アクティブ状態を更新
-                filterBtns.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                
-                // フィルターを更新
-                currentFilter = this.dataset.location;
-                loadHaikuGallery();
+                selectFilter(this, filterBtns);
+            });
+            
+            // タッチイベント（モバイル最適化）
+            btn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                selectFilter(this, filterBtns);
+            });
+            
+            // キーボードアクセシビリティ
+            btn.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectFilter(this, filterBtns);
+                }
             });
         });
+    }
+    
+    /**
+     * フィルター選択の共通処理
+     */
+    function selectFilter(btn, filterBtns) {
+        // アクティブ状態を更新
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // フィルターを更新
+        currentFilter = btn.dataset.location;
+        loadHaikuGallery();
+        
+        // モバイルでの視覚的フィードバック
+        if (window.innerWidth <= 768) {
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                btn.style.transform = '';
+            }, 150);
+        }
     }
     
     /**
@@ -71,17 +101,47 @@ document.addEventListener('DOMContentLoaded', function() {
         const moodInput = document.getElementById('mood');
         
         moodOptions.forEach(option => {
+            // クリックイベント
             option.addEventListener('click', function() {
-                // 他の選択を解除
-                moodOptions.forEach(opt => opt.classList.remove('selected'));
-                
-                // この選択をアクティブに
-                this.classList.add('selected');
-                
-                // 隠しフィールドに値を設定
-                moodInput.value = this.dataset.mood;
+                selectMood(this, moodOptions, moodInput);
+            });
+            
+            // タッチイベント（モバイル最適化）
+            option.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                selectMood(this, moodOptions, moodInput);
+            });
+            
+            // キーボードアクセシビリティ
+            option.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectMood(this, moodOptions, moodInput);
+                }
             });
         });
+    }
+    
+    /**
+     * 気分選択の共通処理
+     */
+    function selectMood(option, moodOptions, moodInput) {
+        // 他の選択を解除
+        moodOptions.forEach(opt => opt.classList.remove('selected'));
+        
+        // この選択をアクティブに
+        option.classList.add('selected');
+        
+        // 隠しフィールドに値を設定
+        moodInput.value = option.dataset.mood;
+        
+        // モバイルでの視覚的フィードバック
+        if (window.innerWidth <= 768) {
+            option.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                option.style.transform = '';
+            }, 150);
+        }
     }
     
     /**
