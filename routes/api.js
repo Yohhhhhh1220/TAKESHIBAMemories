@@ -101,17 +101,17 @@ router.get('/admin/mood-stats', async (req, res) => {
 
 // 音楽サイト連携用：感情データ取得API
 router.get('/emotion-counts', async (req, res) => {
+  // CORS設定: 外部の音楽サイトからアクセスできるように許可（必ず最初に設定）
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // OPTIONSリクエストへの対応 (CORSのプリフライトリクエスト)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   try {
-    // CORS設定: 外部の音楽サイトからアクセスできるように許可
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    // OPTIONSリクエストへの対応 (CORSのプリフライトリクエスト)
-    if (req.method === 'OPTIONS') {
-      return res.status(200).end();
-    }
-
     // 感情統計を取得
     const moodStats = await getMoodStats();
     
