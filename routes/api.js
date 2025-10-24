@@ -99,6 +99,37 @@ router.get('/admin/mood-stats', async (req, res) => {
   }
 });
 
+// 音楽サイト連携用：感情データ取得API
+router.get('/emotion-counts', async (req, res) => {
+  try {
+    // CORS設定: 外部の音楽サイトからアクセスできるように許可
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    // OPTIONSリクエストへの対応 (CORSのプリフライトリクエスト)
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+
+    // 感情統計を取得
+    const moodStats = await getMoodStats();
+    
+    // データベースからの結果を {"Exhilarated": 10, "Calm": 5, ...} という形式に変換
+    const counts = moodStats.reduce((acc, row) => {
+      acc[row.mood] = parseInt(row.count, 10);
+      return acc;
+    }, {});
+    
+    // 集計したデータをJSONとして返す
+    res.status(200).json(counts);
+
+  } catch (error) {
+    console.error('感情データ取得エラー:', error);
+    res.status(500).json({ error: '感情データ取得中にエラーが発生しました' });
+  }
+});
+
 // QRコード生成API（管理者用）
 router.post('/admin/generate-qr', async (req, res) => {
   try {
