@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // 定期的に俳句一覧を更新
-    setInterval(loadHaikuGallery, 30000); // 30秒ごと
+    // setInterval(loadHaikuGallery, 30000); // 30秒ごと
     
     /**
      * イベントリスナーの設定
