@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>俳句展示 - TAKESHIBA Memories</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 2160×3840縦長ディスプレイ専用のスタイル */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f8f6f0;
+            font-family: 'Noto Sans JP', sans-serif;
+            overflow-x: hidden;
+            height: 100vh;
+        }
+
+        /* 圓光寺風のテクスチャ背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .display-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .display-header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: #333;
+        }
+
+        .display-title {
+            font-size: 4rem;
+            font-weight: 300;
+            margin: 0 0 20px 0;
+            color: #333;
+            font-family: 'Shippori Mincho', serif;
+        }
+
+        .display-subtitle {
+            font-size: 1.8rem;
+            font-weight: 300;
+            margin: 0;
+            color: #666;
+            font-family: 'Shippori Mincho', serif;
+        }
+
+        .haiku-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 30px;
+            width: 100%;
+            max-width: 1800px;
+            height: calc(100vh - 300px);
+            padding: 0 40px;
+        }
+
+        .haiku-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .haiku-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .haiku-text {
+            font-size: 2.5rem;
+            font-weight: 500;
+            line-height: 1.8;
+            color: #333;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            white-space: pre-line;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Shippori Mincho', serif;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            letter-spacing: 0.15em;
+            word-spacing: 0.2em;
+            text-align: center;
+            width: 100%;
+        }
+
+        .haiku-meta {
+            font-size: 1.2rem;
+            color: #666;
+            margin-top: auto;
+            font-family: 'Shippori Mincho', serif;
+        }
+
+        .haiku-location {
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .haiku-timestamp {
+            font-size: 1rem;
+            opacity: 0.7;
+            color: #777;
+        }
+
+        .loading-card {
+            background: rgba(255, 255, 255, 0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-style: italic;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(102, 126, 234, 0.2);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-indicator {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            color: #333;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-indicator.connected {
+            background: rgba(76, 175, 80, 0.95);
+            color: white;
+        }
+
+        .status-indicator.disconnected {
+            background: rgba(244, 67, 54, 0.95);
+            color: white;
+        }
+
+        /* 2160×3840ディスプレイ用の最適化 */
+        @media (min-width: 2000px) and (min-height: 3500px) {
+            .display-title {
+                font-size: 5rem;
+            }
+            
+            .display-subtitle {
+                font-size: 2.2rem;
+            }
+            
+            .haiku-text {
+                font-size: 3.5rem;
+                line-height: 1.8;
+                min-height: 150px;
+                margin-top: 40px;
+                margin-bottom: 15px;
+            }
+            
+            .haiku-meta {
+                font-size: 1.5rem;
+            }
+            
+            .haiku-timestamp {
+                font-size: 1.2rem;
+            }
+            
+            .haiku-grid {
+                gap: 50px;
+                padding: 0 80px;
+            }
+            
+            .haiku-card {
+                padding: 50px;
+            }
+        }
+
+        /* アニメーション */
+        .haiku-card.fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .haiku-card.slide-in {
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="display-container">
+        <div class="status-indicator" id="status-indicator">
+            <span id="status-text">接続中...</span>
+        </div>
+        
+        <div class="display-header">
+            <h1 class="display-title">🎋 みんなの俳句</h1>
+            <p class="display-subtitle">竹芝での体験が生み出す美しい俳句たち</p>
+        </div>
+        
+        <div class="haiku-grid" id="haiku-grid">
+            <!-- 8個の俳句カードが動的に生成されます -->
+        </div>
+    </div>
+    
+    <script>
+        // 俳句展示ページのJavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            const haikuGrid = document.getElementById('haiku-grid');
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            
+            let haikus = [];
+            let updateInterval;
+            
+            // ステータスを更新
+            updateStatus('connected', '定期的に更新中');
+            
+            // 初期読み込み
+            loadHaikus();
+            
+            // 定期的な更新（30秒ごと）
+            updateInterval = setInterval(loadHaikus, 30000);
+            
+            /**
+             * 俳句一覧を読み込み（簡素化版）
+             */
+            async function loadHaikus() {
+                try {
+                    const response = await fetch('/api/haikus');
+                    const data = await response.json();
+                    
+                    if (data.haikus) {
+                        haikus = data.haikus;
+                        displayHaikus();
+                    }
+                    
+                } catch (error) {
+                    console.error('俳句読み込みエラー:', error);
+                }
+            }
+            
+            /**
+             * 俳句を表示
+             */
+            function displayHaikus() {
+                haikuGrid.innerHTML = '';
+                
+                // 最新順にソート
+                const sortedHaikus = [...haikus].sort((a, b) => 
+                    new Date(b.created_at || b.timestamp) - new Date(a.created_at || a.timestamp)
+                );
+                
+                // 12個のスロットを確保（3×4グリッド）
+                for (let i = 0; i < 12; i++) {
+                    const haikuCard = document.createElement('div');
+                    haikuCard.className = 'haiku-card';
+                    
+                    if (i < sortedHaikus.length) {
+                        const haiku = sortedHaikus[i];
+                        haikuCard.innerHTML = `
+                            <div class="haiku-text">${formatHaikuForDisplay(haiku.haiku || '俳句を生成中...')}</div>
+                            <div class="haiku-meta">
+                                <div class="haiku-location">${getLocationName(haiku.location_id)}</div>
+                                <div class="haiku-timestamp">${formatTimestamp(haiku.timestamp || haiku.created_at)}</div>
+                            </div>
+                        `;
+                        haikuCard.classList.add('fade-in');
+                    } else {
+                        haikuCard.className = 'haiku-card loading-card';
+                        haikuCard.innerHTML = `
+                            <div class="spinner"></div>
+                            <div>新しい俳句を待っています...</div>
+                        `;
+                    }
+                    
+                    haikuGrid.appendChild(haikuCard);
+                }
+            }
+            
+            /**
+             * 新しい俳句を追加
+             */
+            function addNewHaiku(haikuData) {
+                // 既存の俳句と重複チェック
+                const existingHaiku = haikus.find(h => h.haiku === haikuData.haiku);
+                if (existingHaiku) {
+                    return;
+                }
+                
+                // 新しい俳句を先頭に追加
+                haikus.unshift(haikuData);
+                
+                // 表示を更新
+                displayHaikus();
+                
+                // アニメーション効果
+                const firstCard = haikuGrid.querySelector('.haiku-card');
+                if (firstCard) {
+                    firstCard.classList.add('slide-in');
+                }
+            }
+            
+            /**
+             * 接続状態を更新
+             */
+            function updateStatus(status, text) {
+                statusIndicator.className = `status-indicator ${status}`;
+                statusText.textContent = text;
+            }
+            
+            /**
+             * 場所名を取得
+             */
+            function getLocationName(locationId) {
+                const locationNames = {
+                    'garden': '庭',
+                    'chair': '椅子',
+                    'exhibition': '展示室',
+                    'elevator': 'エレベーター',
+                    'restaurant': 'レストラン',
+                    'other': 'その他'
+                };
+                return locationNames[locationId] || locationId || '不明な場所';
+            }
+            
+            /**
+             * 俳句を5,7,5の音数律で3行表示するようにフォーマット
+             */
+            function formatHaikuForDisplay(haikuText) {
+                if (!haikuText || haikuText === '俳句を生成中...') {
+                    return haikuText;
+                }
+                
+                // 改行で分割して空行を除去
+                const lines = haikuText.split('\n').filter(line => line.trim() !== '');
+                
+                if (lines.length === 1) {
+                    // 1行の場合、5,7,5の音数律に基づいて分割
+                    const text = lines[0].trim();
+                    
+                    // 句読点で分割を試行
+                    const sentences = text.split(/[。、]/).filter(s => s.trim() !== '');
+                    if (sentences.length >= 3) {
+                        return sentences.slice(0, 3).join('\n');
+                    }
+                    
+                    // 文字数で5,7,5に近い分割を試行
+                    const length = text.length;
+                    if (length <= 17) {
+                        // 17文字以下の場合、より均等な分割
+                        const firstBreak = Math.floor(length / 3);
+                        const secondBreak = Math.floor(length * 2 / 3);
+                        
+                        return text.substring(0, firstBreak) + '\n' + 
+                               text.substring(firstBreak, secondBreak) + '\n' + 
+                               text.substring(secondBreak);
+                    } else {
+                        // 17文字を超える場合、均等に3分割
+                        const partLength = Math.ceil(length / 3);
+                        return text.substring(0, partLength) + '\n' + 
+                               text.substring(partLength, partLength * 2) + '\n' + 
+                               text.substring(partLength * 2);
+                    }
+                } else if (lines.length === 2) {
+                    // 2行の場合、長い行を分割して3行に
+                    const line1 = lines[0].trim();
+                    const line2 = lines[1].trim();
+                    
+                    if (line1.length > line2.length) {
+                        // 1行目が長い場合
+                        const midPoint = Math.ceil(line1.length / 2);
+                        return line1.substring(0, midPoint) + '\n' + 
+                               line1.substring(midPoint) + '\n' + 
+                               line2;
+                    } else {
+                        // 2行目が長い場合
+                        const midPoint = Math.ceil(line2.length / 2);
+                        return line1 + '\n' + 
+                               line2.substring(0, midPoint) + '\n' + 
+                               line2.substring(midPoint);
+                    }
+                } else if (lines.length === 3) {
+                    // 3行の場合はそのまま
+                    return lines.join('\n');
+                } else {
+                    // 3行より多い場合は最初の3行のみ
+                    return lines.slice(0, 3).join('\n');
+                }
+            }
+            
+            /**
+             * タイムスタンプをフォーマット
+             */
+            function formatTimestamp(timestamp) {
+                const date = new Date(timestamp);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
+                
+                if (diffMins < 1) {
+                    return 'たった今';
+                } else if (diffMins < 60) {
+                    return `${diffMins}分前`;
+                } else if (diffMins < 1440) {
+                    const diffHours = Math.floor(diffMins / 60);
+                    return `${diffHours}時間前`;
+                } else {
+                    return date.toLocaleDateString('ja-JP', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            }
+            
+            // ページ離脱時のクリーンアップ
+            window.addEventListener('beforeunload', function() {
+                if (updateInterval) {
+                    clearInterval(updateInterval);
+                }
+                if (socket) {
+                    socket.disconnect();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
