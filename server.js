@@ -14,28 +14,35 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // ルート設定
+// Vercel環境では静的ファイルは自動的に配信されるが、
+// 動的ルート（/survey/:locationId など）でHTMLを返す必要がある
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const htmlPath = path.resolve(process.cwd(), 'public', 'index.html');
+  res.sendFile(htmlPath);
 });
 
 // アンケートページ
 app.get('/survey/:locationId', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'survey.html'));
+  const htmlPath = path.resolve(process.cwd(), 'public', 'survey.html');
+  res.sendFile(htmlPath);
 });
 
 // 俳句表示ページ
 app.get('/haiku/:id', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'haiku.html'));
+  const htmlPath = path.resolve(process.cwd(), 'public', 'haiku.html');
+  res.sendFile(htmlPath);
 });
 
 // 管理者ダッシュボード
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  const htmlPath = path.resolve(process.cwd(), 'public', 'admin.html');
+  res.sendFile(htmlPath);
 });
 
 // QRコード一覧ページ
 app.get('/qr-codes', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'qr-codes.html'));
+  const htmlPath = path.resolve(process.cwd(), 'public', 'qr-codes.html');
+  res.sendFile(htmlPath);
 });
 
 // API ルート
