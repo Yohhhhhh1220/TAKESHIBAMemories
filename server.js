@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 // PostgreSQLデータベース初期化
@@ -17,32 +18,67 @@ app.use(express.static('public'));
 // Vercel環境では静的ファイルは自動的に配信されるが、
 // 動的ルート（/survey/:locationId など）でHTMLを返す必要がある
 app.get('/', (req, res) => {
-  const htmlPath = path.resolve(process.cwd(), 'public', 'index.html');
-  res.sendFile(htmlPath);
+  try {
+    const htmlPath = path.join(__dirname, 'public', 'index.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (error) {
+    console.error('Error reading index.html:', error);
+    res.status(500).send('Error loading page');
+  }
 });
 
 // アンケートページ
 app.get('/survey/:locationId', (req, res) => {
-  const htmlPath = path.resolve(process.cwd(), 'public', 'survey.html');
-  res.sendFile(htmlPath);
+  try {
+    const htmlPath = path.join(__dirname, 'public', 'survey.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (error) {
+    console.error('Error reading survey.html:', error);
+    res.status(500).send('Error loading page');
+  }
 });
 
 // 俳句表示ページ
 app.get('/haiku/:id', (req, res) => {
-  const htmlPath = path.resolve(process.cwd(), 'public', 'haiku.html');
-  res.sendFile(htmlPath);
+  try {
+    const htmlPath = path.join(__dirname, 'public', 'haiku.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (error) {
+    console.error('Error reading haiku.html:', error);
+    res.status(500).send('Error loading page');
+  }
 });
 
 // 管理者ダッシュボード
 app.get('/admin', (req, res) => {
-  const htmlPath = path.resolve(process.cwd(), 'public', 'admin.html');
-  res.sendFile(htmlPath);
+  try {
+    const htmlPath = path.join(__dirname, 'public', 'admin.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (error) {
+    console.error('Error reading admin.html:', error);
+    res.status(500).send('Error loading page');
+  }
 });
 
 // QRコード一覧ページ
 app.get('/qr-codes', (req, res) => {
-  const htmlPath = path.resolve(process.cwd(), 'public', 'qr-codes.html');
-  res.sendFile(htmlPath);
+  try {
+    const htmlPath = path.join(__dirname, 'public', 'qr-codes.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (error) {
+    console.error('Error reading qr-codes.html:', error);
+    res.status(500).send('Error loading page');
+  }
 });
 
 // API ルート
