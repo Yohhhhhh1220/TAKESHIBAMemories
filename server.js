@@ -75,11 +75,36 @@ if (io) {
   app.set('io', io);
 }
 
-// データベース初期化
-initializeDatabase().catch(console.error);
+// データベース初期化（非同期で実行、エラーはログに記録するだけ）
+initializeDatabase()
+  .then(() => {
+    console.log('データベース初期化完了');
+  })
+  .catch((error) => {
+    console.error('データベース初期化エラー:', error);
+    console.error('エラーの詳細:', error.message);
+    // 初期化に失敗しても続行（リクエスト時に再試行される）
+  });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`サーバーがポート ${PORT} で起動しました`);
-  console.log(`TAKESHIBA Memories が稼働中です`);
+// エラーハンドリング
+app.use((err, req, res, next) => {
+  console.error('サーバーエラー:', err);
+  res.status(500).json({
+    error: 'サーバーエラーが発生しました',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
+
+// Vercel向けにエクスポート（サーバーレス関数として動作）
+// Vercel環境では常に app をエクスポート
+module.exports = app;
+
+// ローカル開発環境でのみ server.listen() を実行
+// Vercel環境では実行されない（環境変数で判断）
+if (process.env.VERCEL !== '1' && !process.env.VERCEL_ENV) {
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, () => {
+    console.log(`サーバーがポート ${PORT} で起動しました`);
+    console.log(`TAKESHIBA Memories が稼働中です`);
+  });
+}
