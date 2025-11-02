@@ -4,8 +4,17 @@ const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 
-// PostgreSQLデータベース初期化
-const { initializeDatabase } = require('./services/postgresService');
+// PostgreSQLデータベース初期化（遅延読み込み）
+let initializeDatabase;
+try {
+  const postgresService = require('./services/postgresService');
+  initializeDatabase = postgresService.initializeDatabase;
+} catch (error) {
+  console.error('Error loading postgresService:', error);
+  initializeDatabase = async () => {
+    console.warn('Database initialization skipped');
+  };
+}
 
 const app = express();
 
@@ -81,20 +90,40 @@ app.get('/qr-codes', (req, res) => {
   }
 });
 
-// API ルート
-app.use('/api', require('./routes/api'));
-app.use('/api/admin', require('./routes/admin'));
+// API ルート（エラーハンドリング付き）
+try {
+  app.use('/api', require('./routes/api'));
+} catch (error) {
+  console.error('Error loading /api routes:', error);
+  app.use('/api', (req, res) => {
+    res.status(500).json({ error: 'API routes unavailable' });
+  });
+}
+
+try {
+  app.use('/api/admin', require('./routes/admin'));
+} catch (error) {
+  console.error('Error loading /api/admin routes:', error);
+  app.use('/api/admin', (req, res) => {
+    res.status(500).json({ error: 'Admin routes unavailable' });
+  });
+}
 
 // データベース初期化（非同期で実行、エラーはログに記録するだけ）
-initializeDatabase()
-  .then(() => {
-    console.log('データベース初期化完了');
-  })
-  .catch((error) => {
-    console.error('データベース初期化エラー:', error);
-    console.error('エラーの詳細:', error.message);
-    // 初期化に失敗しても続行（リクエスト時に再試行される）
-  });
+// Vercel環境ではリクエスト時に初期化される
+try {
+  initializeDatabase()
+    .then(() => {
+      console.log('データベース初期化完了');
+    })
+    .catch((error) => {
+      console.error('データベース初期化エラー:', error);
+      console.error('エラーの詳細:', error.message);
+      // 初期化に失敗しても続行（リクエスト時に再試行される）
+    });
+} catch (error) {
+  console.error('データベース初期化関数の呼び出しエラー:', error);
+}
 
 // エラーハンドリング（ルートの後に配置）
 app.use((err, req, res, next) => {
