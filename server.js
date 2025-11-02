@@ -21,6 +21,37 @@ const app = express();
 // ミドルウェア設定
 app.use(cors());
 app.use(express.json());
+
+// 静的ファイルの配信（他のルートより前に配置）
+app.get(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/, (req, res) => {
+  try {
+    const filePath = path.join(__dirname, 'public', req.path);
+    const ext = path.extname(req.path);
+    let contentType = 'application/octet-stream';
+    
+    if (ext === '.css') {
+      contentType = 'text/css';
+      const css = fs.readFileSync(filePath, 'utf8');
+      res.setHeader('Content-Type', contentType);
+      return res.send(css);
+    } else if (ext === '.js') {
+      contentType = 'application/javascript';
+      const js = fs.readFileSync(filePath, 'utf8');
+      res.setHeader('Content-Type', contentType);
+      return res.send(js);
+    } else {
+      // 画像などのバイナリファイル
+      const file = fs.readFileSync(filePath);
+      res.setHeader('Content-Type', contentType);
+      return res.send(file);
+    }
+  } catch (error) {
+    console.error('Error reading static file:', req.path, error);
+    res.status(404).send('File not found');
+  }
+});
+
+// フォールバック：express.static
 app.use(express.static('public'));
 
 // ルート設定
