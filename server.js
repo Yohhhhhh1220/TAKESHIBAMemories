@@ -1,26 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const http = require('http');
-const socketIo = require('socket.io');
 require('dotenv').config();
 
 // PostgreSQLデータベース初期化
 const { initializeDatabase } = require('./services/postgresService');
 
 const app = express();
-const server = http.createServer(app);
-
-// Socket.IOは本番環境では無効化（Vercelでは制限あり）
-let io;
-if (process.env.NODE_ENV !== 'production') {
-  io = socketIo(server, {
-    cors: {
-      origin: "*",
-      methods: ["GET", "POST"]
-    }
-  });
-}
 
 // ミドルウェア設定
 app.use(cors());
@@ -56,8 +42,45 @@ app.get('/qr-codes', (req, res) => {
 app.use('/api', require('./routes/api'));
 app.use('/api/admin', require('./routes/admin'));
 
-// Socket.IO接続処理（開発環境のみ）
-if (io) {
+// データベース初期化（非同期で実行、エラーはログに記録するだけ）
+initializeDatabase()
+  .then(() => {
+    console.log('データベース初期化完了');
+  })
+  .catch((error) => {
+    console.error('データベース初期化エラー:', error);
+    console.error('エラーの詳細:', error.message);
+    // 初期化に失敗しても続行（リクエスト時に再試行される）
+  });
+
+// エラーハンドリング（ルートの後に配置）
+app.use((err, req, res, next) => {
+  console.error('サーバーエラー:', err);
+  res.status(500).json({
+    error: 'サーバーエラーが発生しました',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// Vercel向けにエクスポート（サーバーレス関数として動作）
+module.exports = app;
+
+// ローカル開発環境でのみ server.listen() を実行
+// Vercel環境では実行されない
+if (process.env.VERCEL !== '1' && !process.env.VERCEL_ENV && !process.env.VERCEL) {
+  const http = require('http');
+  const PORT = process.env.PORT || 3000;
+  const server = http.createServer(app);
+  
+  // Socket.IO設定（ローカル開発環境のみ）
+  const socketIo = require('socket.io');
+  const io = socketIo(server, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    }
+  });
+  
   io.on('connection', (socket) => {
     console.log('ユーザーが接続しました:', socket.id);
     
@@ -70,39 +93,9 @@ if (io) {
       console.log('ユーザーが切断しました:', socket.id);
     });
   });
-
-  // グローバルにioを利用可能にする
+  
   app.set('io', io);
-}
-
-// データベース初期化（非同期で実行、エラーはログに記録するだけ）
-initializeDatabase()
-  .then(() => {
-    console.log('データベース初期化完了');
-  })
-  .catch((error) => {
-    console.error('データベース初期化エラー:', error);
-    console.error('エラーの詳細:', error.message);
-    // 初期化に失敗しても続行（リクエスト時に再試行される）
-  });
-
-// エラーハンドリング
-app.use((err, req, res, next) => {
-  console.error('サーバーエラー:', err);
-  res.status(500).json({
-    error: 'サーバーエラーが発生しました',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
-
-// Vercel向けにエクスポート（サーバーレス関数として動作）
-// Vercel環境では常に app をエクスポート
-module.exports = app;
-
-// ローカル開発環境でのみ server.listen() を実行
-// Vercel環境では実行されない（環境変数で判断）
-if (process.env.VERCEL !== '1' && !process.env.VERCEL_ENV) {
-  const PORT = process.env.PORT || 3000;
+  
   server.listen(PORT, () => {
     console.log(`サーバーがポート ${PORT} で起動しました`);
     console.log(`TAKESHIBA Memories が稼働中です`);
