@@ -613,19 +613,21 @@ body::before {
 }
 
 .display-link-btn {
-    display: inline-flex;
+    display: inline-flex !important;
     flex-direction: column;
     align-items: center;
     gap: 10px;
     padding: 30px 50px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    color: white !important;
     text-decoration: none;
     border-radius: 20px;
     box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
     transition: all 0.3s ease;
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .display-link-btn:hover {
@@ -768,11 +770,21 @@ body::before {
         touch-action: manipulation;
     }
     
+    /* ディスプレイリンクセクションの最適化 */
+    .display-link-section {
+        display: block !important;
+        visibility: visible !important;
+        margin-top: 40px;
+        margin-bottom: 30px;
+    }
+    
     /* ディスプレイリンクボタンの最適化 */
     .display-link-btn {
         padding: 25px 40px;
         width: 100%;
         max-width: 400px;
+        display: inline-flex !important;
+        visibility: visible !important;
     }
 
     .display-icon {
