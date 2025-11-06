@@ -6,19 +6,15 @@
       "dest": "/server.js"
     },
     {
-      "src": "/admin",
-      "dest": "/server.js"
-    },
-    {
-      "src": "/qr-codes",
-      "dest": "/server.js"
-    },
-    {
       "src": "/survey/(.*)",
       "dest": "/server.js"
     },
     {
       "src": "/haiku/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/display",
       "dest": "/server.js"
     },
     {
