@@ -4,6 +4,19 @@ const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 
+// 環境変数の検証（警告のみ、起動は続行）
+if (!process.env.OPENAI_API_KEY) {
+  console.warn('⚠️  警告: OPENAI_API_KEYが設定されていません');
+  console.warn('   俳句生成機能が正常に動作しない可能性があります');
+} else {
+  const key = String(process.env.OPENAI_API_KEY).trim();
+  if (!key || key.length < 20) {
+    console.warn('⚠️  警告: OPENAI_API_KEYが無効な可能性があります');
+  } else {
+    console.log('✓ OPENAI_API_KEYが設定されています');
+  }
+}
+
 // PostgreSQLデータベース初期化（遅延読み込み）
 let initializeDatabase;
 try {
@@ -51,10 +64,7 @@ app.get(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/, (req, res) =>
   }
 });
 
-// フォールバック：express.static
-app.use(express.static('public'));
-
-// ルート設定
+// ルート設定（express.staticより前に配置）
 // Vercel環境では静的ファイルは自動的に配信されるが、
 // 動的ルート（/survey/:locationId など）でHTMLを返す必要がある
 app.get('/', (req, res) => {
@@ -65,6 +75,19 @@ app.get('/', (req, res) => {
     res.send(html);
   } catch (error) {
     console.error('Error reading index.html:', error);
+    res.status(500).send('Error loading page');
+  }
+});
+
+// ディスプレイページ（縦長ディスプレイ用）- express.staticより前に配置
+app.get('/display', (req, res) => {
+  try {
+    const htmlPath = path.join(__dirname, 'public', 'display.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (error) {
+    console.error('Error reading display.html:', error);
     res.status(500).send('Error loading page');
   }
 });
@@ -95,50 +118,40 @@ app.get('/haiku/:id', (req, res) => {
   }
 });
 
-// 管理者ダッシュボード
-app.get('/admin', (req, res) => {
-  try {
-    const htmlPath = path.join(__dirname, 'public', 'admin.html');
-    const html = fs.readFileSync(htmlPath, 'utf8');
-    res.setHeader('Content-Type', 'text/html');
-    res.send(html);
-  } catch (error) {
-    console.error('Error reading admin.html:', error);
-    res.status(500).send('Error loading page');
-  }
-});
+// フォールバック：express.static（ルートの後に配置）
+app.use(express.static('public'));
 
-// QRコード一覧ページ
-app.get('/qr-codes', (req, res) => {
-  try {
-    const htmlPath = path.join(__dirname, 'public', 'qr-codes.html');
-    const html = fs.readFileSync(htmlPath, 'utf8');
-    res.setHeader('Content-Type', 'text/html');
-    res.send(html);
-  } catch (error) {
-    console.error('Error reading qr-codes.html:', error);
-    res.status(500).send('Error loading page');
-  }
-});
 
 // API ルート（エラーハンドリング付き）
+let apiRoutesLoaded = false;
 try {
-  app.use('/api', require('./routes/api'));
+  console.log('🔄 API routes を読み込み中...');
+  const apiRoutes = require('./routes/api');
+  app.use('/api', apiRoutes);
+  apiRoutesLoaded = true;
+  console.log('✅ API routes loaded successfully');
 } catch (error) {
-  console.error('Error loading /api routes:', error);
-  app.use('/api', (req, res) => {
-    res.status(500).json({ error: 'API routes unavailable' });
+  console.error('❌ Error loading /api routes:', error);
+  console.error('Error details:', error.message);
+  console.error('Error stack:', error.stack);
+  console.error('Error name:', error.name);
+  
+  // より詳細なエラーハンドリング
+  app.use('/api', (req, res, next) => {
+    console.error('API route called but routes unavailable:', req.method, req.path);
+    res.status(500).json({ 
+      error: 'API routes unavailable',
+      message: error.message || 'Unknown error',
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      details: {
+        name: error.name,
+        message: error.message,
+        code: error.code
+      }
+    });
   });
 }
 
-try {
-  app.use('/api/admin', require('./routes/admin'));
-} catch (error) {
-  console.error('Error loading /api/admin routes:', error);
-  app.use('/api/admin', (req, res) => {
-    res.status(500).json({ error: 'Admin routes unavailable' });
-  });
-}
 
 // データベース初期化（非同期で実行、エラーはログに記録するだけ）
 // Vercel環境ではリクエスト時に初期化される
