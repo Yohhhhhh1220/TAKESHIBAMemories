@@ -51,451 +51,329 @@
         }
 
         .display-title {
-            font-size: 4rem;
+            font-size: 5rem;
             font-weight: 300;
-            margin: 0 0 20px 0;
-            color: #333;
-            font-family: 'Shippori Mincho', serif;
+            margin-bottom: 20px;
+            letter-spacing: 0.1em;
         }
 
         .display-subtitle {
-            font-size: 1.8rem;
-            font-weight: 300;
-            margin: 0;
-            color: #666;
-            font-family: 'Shippori Mincho', serif;
-        }
-
-        .haiku-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(4, 1fr);
-            gap: 30px;
-            width: 100%;
-            max-width: 1800px;
-            height: calc(100vh - 300px);
-            padding: 0 40px;
-        }
-
-        .haiku-card {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 15px;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .haiku-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-        }
-
-        .haiku-text {
             font-size: 2.5rem;
-            font-weight: 500;
-            line-height: 1.8;
-            color: #333;
-            margin-top: 30px;
-            margin-bottom: 10px;
-            white-space: pre-line;
-            min-height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Shippori Mincho', serif;
-            writing-mode: vertical-rl;
-            text-orientation: upright;
-            letter-spacing: 0.15em;
-            word-spacing: 0.2em;
-            text-align: center;
+            font-weight: 300;
+            color: #7f8c8d;
+            letter-spacing: 0.05em;
+        }
+
+        .haikus-container {
             width: 100%;
+            max-width: 2000px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 60px;
+            padding: 60px;
+            overflow-y: auto;
+            flex: 1;
         }
 
-        .haiku-meta {
-            font-size: 1.2rem;
-            color: #666;
-            margin-top: auto;
-            font-family: 'Shippori Mincho', serif;
-        }
-
-        .haiku-location {
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: #555;
-        }
-
-        .haiku-timestamp {
-            font-size: 1rem;
-            opacity: 0.7;
-            color: #777;
-        }
-
-        .loading-card {
-            background: rgba(255, 255, 255, 0.6);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-style: italic;
-            font-size: 1.2rem;
-            text-align: center;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(102, 126, 234, 0.2);
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .status-indicator {
-            position: fixed;
-            top: 30px;
-            right: 30px;
+        .haiku-display-card {
             background: rgba(255, 255, 255, 0.95);
-            padding: 15px 20px;
-            border-radius: 25px;
-            font-size: 1rem;
-            color: #333;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            backdrop-filter: blur(10px);
+            padding: 100px 80px;
+            border-radius: 40px;
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.1),
+                0 0 0 1px rgba(255,255,255,0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .status-indicator.connected {
-            background: rgba(76, 175, 80, 0.95);
-            color: white;
+        .haiku-display-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
         }
 
-        .status-indicator.disconnected {
-            background: rgba(244, 67, 54, 0.95);
-            color: white;
+        .haiku-display-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 40px 80px rgba(0,0,0,0.15),
+                0 0 0 1px rgba(255,255,255,0.2);
         }
 
-        /* 2160×3840ディスプレイ用の最適化 */
-        @media (min-width: 2000px) and (min-height: 3500px) {
+        .haiku-display-text {
+            font-size: 3.5rem;
+            line-height: 2.5;
+            font-weight: 300;
+            margin-bottom: 40px;
+            letter-spacing: 0.1em;
+            color: #2c3e50;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-family: 'Shippori Mincho', serif;
+            min-height: 8em;
+            display: flex;
+            flex-direction: row; /* 縦書きでは行が横（右から左）に並ぶ */
+            justify-content: center;
+            align-items: stretch;
+            gap: 2.5em; /* 行間 */
+            height: auto;
+            max-width: 100%;
+        }
+        
+        .haiku-line {
+            display: inline-block;
+            writing-mode: vertical-rl; /* 各行情報を縦書き */
+            text-orientation: upright; /* 文字を縦向きに */
+            line-height: 1.8;
+            letter-spacing: 0.2em;
+        }
+
+        .haiku-display-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.5rem;
+            color: #7f8c8d;
+            padding-top: 30px;
+            border-top: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .loading-message {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 2.5rem;
+            padding: 100px;
+        }
+
+        .error-message {
+            text-align: center;
+            color: #e74c3c;
+            font-size: 2.5rem;
+            padding: 100px;
+        }
+
+        /* 縦長ディスプレイ最適化 */
+        @media (min-width: 2160px) and (min-height: 3840px) {
+            .haikus-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 80px;
+                padding: 100px;
+            }
+
+            .haiku-display-text {
+                font-size: 4.5rem;
+                line-height: 2.8;
+            }
+
             .display-title {
-                font-size: 5rem;
+                font-size: 6rem;
             }
-            
+
             .display-subtitle {
-                font-size: 2.2rem;
+                font-size: 3rem;
             }
-            
-            .haiku-text {
-                font-size: 3.5rem;
-                line-height: 1.8;
-                min-height: 150px;
-                margin-top: 40px;
-                margin-bottom: 15px;
+        }
+
+        /* 横長ディスプレイ対応 */
+        @media (min-width: 3840px) and (max-height: 2160px) {
+            .haikus-container {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 40px;
             }
-            
-            .haiku-meta {
-                font-size: 1.5rem;
-            }
-            
-            .haiku-timestamp {
-                font-size: 1.2rem;
-            }
-            
-            .haiku-grid {
+        }
+
+        /* 通常のディスプレイ対応 */
+        @media (max-width: 1920px) {
+            .haikus-container {
+                grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
                 gap: 50px;
-                padding: 0 80px;
-            }
-            
-            .haiku-card {
                 padding: 50px;
             }
-        }
 
-        /* アニメーション */
-        .haiku-card.fade-in {
-            animation: fadeIn 0.6s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .haiku-card.slide-in {
-            animation: slideIn 0.8s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
+            .haiku-display-text {
+                font-size: 3rem;
             }
         }
     </style>
 </head>
 <body>
     <div class="display-container">
-        <div class="status-indicator" id="status-indicator">
-            <span id="status-text">接続中...</span>
-        </div>
-        
         <div class="display-header">
-            <h1 class="display-title">🎋 みんなの俳句</h1>
-            <p class="display-subtitle">竹芝での体験が生み出す美しい俳句たち</p>
+            <h1 class="display-title">TAKESHIBA Memories</h1>
+            <p class="display-subtitle">みんなの俳句</p>
         </div>
         
-        <div class="haiku-grid" id="haiku-grid">
-            <!-- 8個の俳句カードが動的に生成されます -->
+        <div class="haikus-container" id="haikus-container">
+            <div class="loading-message">俳句を読み込み中...</div>
         </div>
     </div>
-    
+
     <script>
-        // 俳句展示ページのJavaScript
-        document.addEventListener('DOMContentLoaded', function() {
-            const haikuGrid = document.getElementById('haiku-grid');
-            const statusIndicator = document.getElementById('status-indicator');
-            const statusText = document.getElementById('status-text');
-            
-            let haikus = [];
-            let updateInterval;
-            
-            // ステータスを更新
-            updateStatus('connected', '定期的に更新中');
-            
-            // 初期読み込み
-            loadHaikus();
-            
-            // 定期的な更新（30秒ごと）
-            updateInterval = setInterval(loadHaikus, 30000);
-            
-            /**
-             * 俳句一覧を読み込み（簡素化版）
-             */
-            async function loadHaikus() {
-                try {
-                    const response = await fetch('/api/haikus');
-                    const data = await response.json();
-                    
-                    if (data.haikus) {
-                        haikus = data.haikus;
-                        displayHaikus();
-                    }
-                    
-                } catch (error) {
-                    console.error('俳句読み込みエラー:', error);
-                }
-            }
-            
-            /**
-             * 俳句を表示
-             */
-            function displayHaikus() {
-                haikuGrid.innerHTML = '';
+        const haikusContainer = document.getElementById('haikus-container');
+        
+        // 場所名のマッピング
+        const locationNames = {
+            'takeshiba-station': '竹芝駅',
+            'takeshiba-pier': '竹芝桟橋',
+            'takeshiba-park': '竹芝公園',
+            'takeshiba-building': '竹芝ビル',
+            'chair': '椅子',
+            'elevator': 'エレベーター',
+            'exhibition': '展示',
+            'garden': '庭園',
+            'restaurant': 'レストラン'
+        };
+
+        function getLocationName(locationId) {
+            return locationNames[locationId] || locationId || '竹芝エリア';
+        }
+
+        // 俳句を読み込む
+        async function loadHaikus() {
+            try {
+                const response = await fetch('/api/haikus');
+                const data = await response.json();
                 
-                // 最新順にソート
-                const sortedHaikus = [...haikus].sort((a, b) => 
-                    new Date(b.created_at || b.timestamp) - new Date(a.created_at || a.timestamp)
-                );
-                
-                // 12個のスロットを確保（3×4グリッド）
-                for (let i = 0; i < 12; i++) {
-                    const haikuCard = document.createElement('div');
-                    haikuCard.className = 'haiku-card';
-                    
-                    if (i < sortedHaikus.length) {
-                        const haiku = sortedHaikus[i];
-                        haikuCard.innerHTML = `
-                            <div class="haiku-text">${formatHaikuForDisplay(haiku.haiku || '俳句を生成中...')}</div>
-                            <div class="haiku-meta">
-                                <div class="haiku-location">${getLocationName(haiku.location_id)}</div>
-                                <div class="haiku-timestamp">${formatTimestamp(haiku.timestamp || haiku.created_at)}</div>
-                            </div>
-                        `;
-                        haikuCard.classList.add('fade-in');
-                    } else {
-                        haikuCard.className = 'haiku-card loading-card';
-                        haikuCard.innerHTML = `
-                            <div class="spinner"></div>
-                            <div>新しい俳句を待っています...</div>
-                        `;
-                    }
-                    
-                    haikuGrid.appendChild(haikuCard);
-                }
-            }
-            
-            /**
-             * 新しい俳句を追加
-             */
-            function addNewHaiku(haikuData) {
-                // 既存の俳句と重複チェック
-                const existingHaiku = haikus.find(h => h.haiku === haikuData.haiku);
-                if (existingHaiku) {
-                    return;
-                }
-                
-                // 新しい俳句を先頭に追加
-                haikus.unshift(haikuData);
-                
-                // 表示を更新
-                displayHaikus();
-                
-                // アニメーション効果
-                const firstCard = haikuGrid.querySelector('.haiku-card');
-                if (firstCard) {
-                    firstCard.classList.add('slide-in');
-                }
-            }
-            
-            /**
-             * 接続状態を更新
-             */
-            function updateStatus(status, text) {
-                statusIndicator.className = `status-indicator ${status}`;
-                statusText.textContent = text;
-            }
-            
-            /**
-             * 場所名を取得
-             */
-            function getLocationName(locationId) {
-                const locationNames = {
-                    'garden': '庭',
-                    'chair': '椅子',
-                    'exhibition': '展示室',
-                    'elevator': 'エレベーター',
-                    'restaurant': 'レストラン',
-                    'other': 'その他'
-                };
-                return locationNames[locationId] || locationId || '不明な場所';
-            }
-            
-            /**
-             * 俳句を5,7,5の音数律で3行表示するようにフォーマット
-             */
-            function formatHaikuForDisplay(haikuText) {
-                if (!haikuText || haikuText === '俳句を生成中...') {
-                    return haikuText;
-                }
-                
-                // 改行で分割して空行を除去
-                const lines = haikuText.split('\n').filter(line => line.trim() !== '');
-                
-                if (lines.length === 1) {
-                    // 1行の場合、5,7,5の音数律に基づいて分割
-                    const text = lines[0].trim();
-                    
-                    // 句読点で分割を試行
-                    const sentences = text.split(/[。、]/).filter(s => s.trim() !== '');
-                    if (sentences.length >= 3) {
-                        return sentences.slice(0, 3).join('\n');
-                    }
-                    
-                    // 文字数で5,7,5に近い分割を試行
-                    const length = text.length;
-                    if (length <= 17) {
-                        // 17文字以下の場合、より均等な分割
-                        const firstBreak = Math.floor(length / 3);
-                        const secondBreak = Math.floor(length * 2 / 3);
-                        
-                        return text.substring(0, firstBreak) + '\n' + 
-                               text.substring(firstBreak, secondBreak) + '\n' + 
-                               text.substring(secondBreak);
-                    } else {
-                        // 17文字を超える場合、均等に3分割
-                        const partLength = Math.ceil(length / 3);
-                        return text.substring(0, partLength) + '\n' + 
-                               text.substring(partLength, partLength * 2) + '\n' + 
-                               text.substring(partLength * 2);
-                    }
-                } else if (lines.length === 2) {
-                    // 2行の場合、長い行を分割して3行に
-                    const line1 = lines[0].trim();
-                    const line2 = lines[1].trim();
-                    
-                    if (line1.length > line2.length) {
-                        // 1行目が長い場合
-                        const midPoint = Math.ceil(line1.length / 2);
-                        return line1.substring(0, midPoint) + '\n' + 
-                               line1.substring(midPoint) + '\n' + 
-                               line2;
-                    } else {
-                        // 2行目が長い場合
-                        const midPoint = Math.ceil(line2.length / 2);
-                        return line1 + '\n' + 
-                               line2.substring(0, midPoint) + '\n' + 
-                               line2.substring(midPoint);
-                    }
-                } else if (lines.length === 3) {
-                    // 3行の場合はそのまま
-                    return lines.join('\n');
+                if (data.haikus && data.haikus.length > 0) {
+                    displayHaikus(data.haikus);
                 } else {
-                    // 3行より多い場合は最初の3行のみ
-                    return lines.slice(0, 3).join('\n');
+                    haikusContainer.innerHTML = '<div class="loading-message">まだ俳句がありません</div>';
+                }
+            } catch (error) {
+                console.error('俳句読み込みエラー:', error);
+                haikusContainer.innerHTML = '<div class="error-message">俳句の読み込みに失敗しました</div>';
+            }
+        }
+
+        // 日本語の文字を音数としてカウント（概算）
+        function countMorae(text) {
+            // 長音記号や小文字を考慮した簡易的な音数カウント
+            let count = 0;
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                // ひらがな・カタカナ・漢字は基本的に1音
+                if (/[ぁ-んァ-ン一-龯々]/.test(char)) {
+                    count++;
+                }
+                // 長音記号は音数に含めない（前の文字と合わせて1音）
+                else if (char === 'ー' || char === '−') {
+                    // 前の文字と合わせて1音として扱うため、カウントしない
+                }
+                // その他の文字（句読点、スペースなど）は音数に含めない
+            }
+            return count;
+        }
+
+        // 俳句を5-7-5の3行に整形する関数
+        function formatHaikuToThreeLines(haikuText) {
+            if (!haikuText || haikuText.trim() === '') {
+                return '俳句を生成中...\n\n';
+            }
+            
+            // 既存の改行を除去して1行に
+            const cleaned = haikuText.trim().replace(/\s+/g, '').replace(/[\n\r]+/g, '');
+            
+            // 既に改行がある場合は、その改行を保持して確認
+            const originalLines = haikuText.trim().split(/[\n\r]+/).filter(line => line.trim() !== '');
+            
+            // 既に3行になっていて、5-7-5に近い場合はそのまま使用
+            if (originalLines.length === 3) {
+                const count1 = countMorae(originalLines[0]);
+                const count2 = countMorae(originalLines[1]);
+                const count3 = countMorae(originalLines[2]);
+                // 5-7-5に近い場合（許容範囲：±2音）
+                if (Math.abs(count1 - 5) <= 2 && Math.abs(count2 - 7) <= 2 && Math.abs(count3 - 5) <= 2) {
+                    return originalLines.join('\n');
                 }
             }
             
-            /**
-             * タイムスタンプをフォーマット
-             */
-            function formatTimestamp(timestamp) {
-                const date = new Date(timestamp);
-                const now = new Date();
-                const diffMs = now - date;
-                const diffMins = Math.floor(diffMs / 60000);
+            // 全体の文字列から5-7-5に分割
+            const totalLength = cleaned.length;
+            // 5:7:5の比率で分割（全体が17音を想定）
+            // 実際の文字数ベースで分割
+            const ratio1 = 5 / 17;  // 最初の5音分
+            const ratio2 = 12 / 17; // 最初の12音分（5+7）
+            
+            let pos1 = Math.floor(totalLength * ratio1);
+            let pos2 = Math.floor(totalLength * ratio2);
+            
+            // 句読点やスペースの近くで調整
+            const findBestSplitPoint = (targetPos, text, range = 5) => {
+                let bestPos = targetPos;
+                let bestDistance = range;
                 
-                if (diffMins < 1) {
-                    return 'たった今';
-                } else if (diffMins < 60) {
-                    return `${diffMins}分前`;
-                } else if (diffMins < 1440) {
-                    const diffHours = Math.floor(diffMins / 60);
-                    return `${diffHours}時間前`;
-                } else {
-                    return date.toLocaleDateString('ja-JP', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
+                for (let i = Math.max(0, targetPos - range); i < Math.min(text.length, targetPos + range); i++) {
+                    // 句読点や切れ字の後を優先
+                    if (/[、。やかなけりなり]/.test(text[i])) {
+                        const distance = Math.abs(targetPos - i);
+                        if (distance < bestDistance) {
+                            bestDistance = distance;
+                            bestPos = i + 1;
+                        }
+                    }
                 }
-            }
+                return bestPos;
+            };
             
-            // ページ離脱時のクリーンアップ
-            window.addEventListener('beforeunload', function() {
-                if (updateInterval) {
-                    clearInterval(updateInterval);
-                }
-                if (socket) {
-                    socket.disconnect();
-                }
+            pos1 = findBestSplitPoint(pos1, cleaned);
+            pos2 = findBestSplitPoint(pos2, cleaned, 8);
+            
+            // 3行に分割
+            const line1 = cleaned.substring(0, pos1).trim();
+            const line2 = cleaned.substring(pos1, pos2).trim();
+            const line3 = cleaned.substring(pos2).trim();
+            
+            return `${line1}\n${line2}\n${line3}`;
+        }
+
+        // 俳句を表示
+        function displayHaikus(haikus) {
+            haikusContainer.innerHTML = '';
+            
+            // 新しい順にソート
+            haikus.sort((a, b) => new Date(b.created_at || b.timestamp) - new Date(a.created_at || a.timestamp));
+            
+            haikus.forEach(haiku => {
+                const card = document.createElement('div');
+                card.className = 'haiku-display-card';
+                
+                const date = new Date(haiku.created_at || haiku.timestamp);
+                const formattedDate = date.toLocaleString('ja-JP', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // 俳句を5-7-5の3行に整形
+                const formattedHaiku = formatHaikuToThreeLines(haiku.haiku);
+                const lines = formattedHaiku.split('\n');
+                
+                // 縦書き表示用に各行を縦に配置
+                card.innerHTML = `
+                    <div class="haiku-display-text">
+                        ${lines.map((line, index) => `<span class="haiku-line" data-line="${index + 1}">${line}</span>`).join('')}
+                    </div>
+                    <div class="haiku-display-meta">
+                        <div class="haiku-location">📍 ${getLocationName(haiku.location_id)}</div>
+                        <div class="haiku-timestamp">${formattedDate}</div>
+                    </div>
+                `;
+                
+                haikusContainer.appendChild(card);
             });
-        });
+        }
+
+        // 初期読み込み
+        loadHaikus();
+
+        // 定期的に更新（30秒ごと）
+        setInterval(loadHaikus, 30000);
     </script>
 </body>
 </html>
+
