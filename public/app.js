@@ -31,7 +31,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Socket.IOでリアルタイム俳句を受信（開発環境のみ）
     if (socket) {
         socket.on('new-haiku', function(data) {
-            addHaikuToGallery(data);
+            // リアルタイムで新しい俳句が来た場合は先頭に追加
+            const haikuItem = document.createElement('div');
+            haikuItem.className = 'haiku-item';
+            haikuItem.innerHTML = `
+                <div class="haiku-text">${data.haiku || '俳句を生成中...'}</div>
+                <div class="haiku-meta">
+                    <div class="haiku-location">${getLocationName(data.location_id)}</div>
+                    <div class="haiku-timestamp">${new Date(data.timestamp || data.created_at || new Date()).toLocaleString('ja-JP')}</div>
+                </div>
+            `;
+            haikuGallery.insertBefore(haikuItem, haikuGallery.firstChild);
         });
     }
     
@@ -319,16 +329,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayHaikuGallery(haikus) {
         haikuGallery.innerHTML = '';
         
-        if (haikus.length === 0) {
+        if (!haikus || haikus.length === 0) {
             haikuGallery.innerHTML = '<p class="no-haikus">まだ俳句がありません。最初の俳句を作ってみませんか？</p>';
             return;
         }
         
-        // 最新順にソートして最新6つのみを表示
+        // 最新順にソート（表示数の制限なし - 全ての俳句を表示）
         haikus.sort((a, b) => new Date(b.created_at || b.timestamp) - new Date(a.created_at || a.timestamp));
         
-        // 最新6つの俳句のみを表示
-        haikus.slice(0, 6).forEach(haiku => {
+        // 全ての俳句を表示（制限なし）
+        console.log(`俳句を表示中: ${haikus.length}件`);
+        haikus.forEach((haiku, index) => {
             addHaikuToGallery(haiku);
         });
     }
@@ -337,33 +348,54 @@ document.addEventListener('DOMContentLoaded', function() {
      * 俳句をギャラリーに追加
      */
     function addHaikuToGallery(haikuData) {
-        // 既存の俳句と重複していないかチェック
+        // 重複チェックを緩和：同じ俳句でも日時や場所が異なる場合は表示
+        // IDがある場合はIDで、ない場合は俳句テキスト+日時+場所で判定
         const existingItems = haikuGallery.querySelectorAll('.haiku-item');
+        const haikuId = haikuData.id || haikuData.survey_id;
+        const haikuTimestamp = haikuData.timestamp || haikuData.created_at;
+        const haikuLocation = haikuData.location_id;
+        
         for (let item of existingItems) {
-            const existingText = item.querySelector('.haiku-text').textContent;
-            if (existingText === haikuData.haiku) {
-                return; // 重複している場合は追加しない
+            const itemId = item.dataset.haikuId;
+            const itemText = item.querySelector('.haiku-text').textContent;
+            
+            // IDがある場合はIDで判定
+            if (haikuId && itemId && haikuId.toString() === itemId) {
+                return; // 同じIDの場合は追加しない
+            }
+            
+            // IDがない場合は、テキスト+日時+場所で判定（より厳密に）
+            if (!haikuId && itemText === haikuData.haiku) {
+                const itemTimestamp = item.dataset.timestamp;
+                const itemLocation = item.dataset.location;
+                
+                // 同じテキスト、同じ日時、同じ場所の場合は重複として扱う
+                if (itemTimestamp === haikuTimestamp && itemLocation === haikuLocation) {
+                    return;
+                }
             }
         }
     
-    const haikuItem = document.createElement('div');
-    haikuItem.className = 'haiku-item';
-    haikuItem.innerHTML = `
-        <div class="haiku-text">${haikuData.haiku || '俳句を生成中...'}</div>
-        <div class="haiku-meta">
-                <div class="haiku-location">${getLocationName(haikuData.location_id)}</div>
-                <div class="haiku-timestamp">${new Date(haikuData.timestamp || haikuData.created_at).toLocaleString('ja-JP')}</div>
-        </div>
-    `;
-    
-    // 先頭に追加
-        haikuGallery.insertBefore(haikuItem, haikuGallery.firstChild);
-    
-    // 最大6個まで表示
-        const items = haikuGallery.querySelectorAll('.haiku-item');
-    if (items.length > 6) {
-            haikuGallery.removeChild(items[items.length - 1]);
+        const haikuItem = document.createElement('div');
+        haikuItem.className = 'haiku-item';
+        
+        // データ属性を追加して重複チェックに使用
+        if (haikuId) {
+            haikuItem.dataset.haikuId = haikuId.toString();
         }
+        haikuItem.dataset.timestamp = haikuTimestamp;
+        haikuItem.dataset.location = haikuLocation || '';
+        
+        haikuItem.innerHTML = `
+            <div class="haiku-text">${haikuData.haiku || '俳句を生成中...'}</div>
+            <div class="haiku-meta">
+                <div class="haiku-location">${getLocationName(haikuData.location_id)}</div>
+                <div class="haiku-timestamp">${new Date(haikuTimestamp).toLocaleString('ja-JP')}</div>
+            </div>
+        `;
+        
+        // 末尾に追加（新しい順にソート済みなので、末尾に追加すれば新しいものが上に表示される）
+        haikuGallery.appendChild(haikuItem);
     }
     
     /**
