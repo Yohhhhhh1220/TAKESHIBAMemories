@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" width="800" height="200">
+  <!-- 白背景 -->
+  <rect width="800" height="200" fill="white"/>
+  
+  <!-- 都市のスカイライン（左側） -->
+  <g id="skyline">
+    <!-- 左から1番目の建物（中くらいの高さ） -->
+    <rect x="50" y="120" width="60" height="60" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="55" y1="140" x2="105" y2="140" stroke="black" stroke-width="1.5"/>
+    <line x1="55" y1="160" x2="105" y2="160" stroke="black" stroke-width="1.5"/>
+    
+    <!-- 左から2番目の建物（低く幅広） -->
+    <rect x="120" y="140" width="80" height="40" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="125" y1="155" x2="195" y2="155" stroke="black" stroke-width="1.5"/>
+    <line x1="125" y1="170" x2="195" y2="170" stroke="black" stroke-width="1.5"/>
+    
+    <!-- 左から3番目の建物（最も高い） -->
+    <rect x="210" y="60" width="50" height="120" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="215" y1="80" x2="255" y2="80" stroke="black" stroke-width="1.5"/>
+    <line x1="215" y1="100" x2="255" y2="100" stroke="black" stroke-width="1.5"/>
+    <line x1="215" y1="120" x2="255" y2="120" stroke="black" stroke-width="1.5"/>
+    <line x1="215" y1="140" x2="255" y2="140" stroke="black" stroke-width="1.5"/>
+    <line x1="215" y1="160" x2="255" y2="160" stroke="black" stroke-width="1.5"/>
+    <line x1="235" y1="60" x2="235" y2="80" stroke="black" stroke-width="1.5"/>
+    <!-- 尖った頂部 -->
+    <line x1="235" y1="60" x2="230" y2="50" stroke="black" stroke-width="2"/>
+    <line x1="235" y1="60" x2="240" y2="50" stroke="black" stroke-width="2"/>
+    
+    <!-- 左から4番目の建物（短い長方形） -->
+    <rect x="270" y="150" width="50" height="30" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="275" y1="165" x2="315" y2="165" stroke="black" stroke-width="1.5"/>
+    
+    <!-- 垂直の区切り線 -->
+    <line x1="330" y1="60" x2="330" y2="180" stroke="black" stroke-width="2"/>
+  </g>
+  
+  <!-- テキスト要素（右側） -->
+  <g id="text" font-family="Arial, sans-serif" fill="black">
+    <!-- "city" -->
+    <text x="350" y="100" font-size="32" font-weight="normal" letter-spacing="2">city</text>
+    
+    <!-- "memories" -->
+    <text x="345" y="140" font-size="48" font-weight="bold" letter-spacing="1">memories</text>
+    
+    <!-- "TAKESHIBA" -->
+    <text x="350" y="175" font-size="18" font-weight="normal" letter-spacing="4">TAKESHIBA</text>
+  </g>
+</svg>
+
+
