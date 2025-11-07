@@ -80,9 +80,9 @@ body::before {
 }
 
 .subtitle {
-    font-size: 1.4rem;
-    font-weight: 500;
-    color: #2c3e50;
+    font-size: 1.6rem;
+    font-weight: 300;
+    color: #000000;
     letter-spacing: 0.05em;
 }
 
