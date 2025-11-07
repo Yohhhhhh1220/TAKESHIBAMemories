@@ -57,6 +57,14 @@
             letter-spacing: 0.1em;
         }
 
+        .display-logo {
+            max-width: 800px;
+            width: 100%;
+            height: auto;
+            margin: 0 auto 20px;
+            display: block;
+        }
+
         .display-subtitle {
             font-size: 2.5rem;
             font-weight: 300;
@@ -108,7 +116,7 @@
         .haiku-display-text {
             font-size: 3.5rem;
             line-height: 2.5;
-            font-weight: 300;
+            font-weight: bold;
             margin-bottom: 40px;
             letter-spacing: 0.1em;
             color: #2c3e50;
@@ -169,8 +177,8 @@
                 gap: 1.5em; /* 行間を狭める */
             }
 
-            .display-title {
-                font-size: 6rem;
+            .display-logo {
+                max-width: 1000px;
             }
 
             .display-subtitle {
@@ -203,7 +211,7 @@
 <body>
     <div class="display-container">
         <div class="display-header">
-            <h1 class="display-title">TAKESHIBA Memories</h1>
+            <img src="/logo.png" alt="" class="display-logo" onerror="this.style.display='none';">
             <p class="display-subtitle">みんなの俳句</p>
         </div>
         

@@ -70,6 +70,15 @@ body::before {
     border-radius: 1px;
 }
 
+.logo {
+    max-width: 600px;
+    width: 100%;
+    height: auto;
+    margin: 0 auto 20px;
+    display: block;
+    object-fit: contain;
+}
+
 .subtitle {
     font-size: 1.4rem;
     font-weight: 300;
@@ -689,6 +698,11 @@ body::before {
         font-size: 2.2rem;
         margin-bottom: 15px;
         line-height: 1.3;
+    }
+    
+    .logo {
+        max-width: 90%;
+        margin-bottom: 15px;
     }
     
     .subtitle {
