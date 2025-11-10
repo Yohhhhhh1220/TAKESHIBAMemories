@@ -80,7 +80,7 @@ body::before {
 }
 
 .subtitle {
-    font-size: 1.6rem;
+    font-size: 2rem;
     font-weight: 300;
     color: #000000;
     letter-spacing: 0.05em;
@@ -706,7 +706,7 @@ body::before {
     }
     
     .subtitle {
-        font-size: 1.1rem;
+        font-size: 1.4rem;
     }
     
     .main {
@@ -899,7 +899,7 @@ body::before {
     }
     
     .subtitle {
-        font-size: 1rem;
+        font-size: 1.2rem;
     }
     
     .main {
