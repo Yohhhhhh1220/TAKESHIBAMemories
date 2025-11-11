@@ -71,7 +71,8 @@ body::before {
 }
 
 .logo {
-    width: auto;
+    max-width: 400px;
+    width: 100%;
     height: auto;
     margin: 0 auto 20px;
     display: block;
@@ -700,7 +701,8 @@ body::before {
     }
     
     .logo {
-        width: auto;
+        max-width: 80%;
+        width: 100%;
         height: auto;
         margin-bottom: 15px;
     }
