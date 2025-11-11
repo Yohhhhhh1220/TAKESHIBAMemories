@@ -52,6 +52,11 @@ app.get(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/, (req, res) =>
       const js = fs.readFileSync(filePath, 'utf8');
       res.setHeader('Content-Type', contentType);
       return res.send(js);
+    } else if (ext === '.svg') {
+      contentType = 'image/svg+xml';
+      const svg = fs.readFileSync(filePath, 'utf8');
+      res.setHeader('Content-Type', contentType);
+      return res.send(svg);
     } else {
       // 画像などのバイナリファイル
       const file = fs.readFileSync(filePath);
