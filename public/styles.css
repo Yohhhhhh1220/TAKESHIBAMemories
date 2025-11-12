@@ -928,6 +928,10 @@ body::before {
         grid-template-columns: repeat(4, 1fr);
         padding: 0 1px;
         box-sizing: border-box;
+        transform: scale(0.67);
+        transform-origin: top center;
+        width: 149.25%;
+        margin-left: -24.625%;
     }
     
     .mood-option {
