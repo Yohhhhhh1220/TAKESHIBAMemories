@@ -286,9 +286,11 @@ async function getAllHaikus() {
   try {
     // データベースが初期化されていることを確認
     if (!isInitialized) {
+      console.log('データベースが初期化されていないため、初期化を実行します...');
       await initializeDatabase();
     }
     
+    console.log('全俳句を取得中...');
     const result = await query(
       `SELECT DISTINCT h.haiku_text as haiku, s.location_id, s.penname, h.created_at, h.id
        FROM haikus h
@@ -296,10 +298,14 @@ async function getAllHaikus() {
        ORDER BY h.created_at DESC`
     );
     
-    return result.rows || [];
+    const haikus = result.rows || [];
+    console.log(`取得した俳句数: ${haikus.length}件`);
+    
+    return haikus;
   } catch (error) {
     console.error('全俳句取得エラー:', error);
     console.error('エラーの詳細:', error.message);
+    console.error('エラーのスタック:', error.stack);
     
     // テーブルが存在しない場合は空配列を返す
     if (error.message && (
@@ -311,6 +317,19 @@ async function getAllHaikus() {
       return [];
     }
     
+    // データベース接続エラーの場合も空配列を返す（エラーを再スローしない）
+    if (error.message && (
+      error.message.includes('データベース接続') ||
+      error.message.includes('connection') ||
+      error.message.includes('POSTGRES_URL') ||
+      error.message.includes('DATABASE_URL') ||
+      error.message.includes('getPool')
+    )) {
+      console.warn('⚠️  データベース接続エラー。空配列を返します。');
+      return [];
+    }
+    
+    // その他のエラーは再スロー
     throw error;
   }
 }

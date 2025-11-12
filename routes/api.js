@@ -202,14 +202,36 @@ router.get('/haikus', async (req, res) => {
     }
     
     const haikus = await getAllHaikus();
-    res.json({ haikus });
+    
+    // 空配列の場合も正常なレスポンスとして返す
+    res.json({ 
+      haikus: haikus || [],
+      success: true 
+    });
   } catch (error) {
     console.error('俳句一覧取得エラー:', error);
     console.error('エラーの詳細:', error.message);
     console.error('エラーのスタック:', error.stack);
+    
+    // データベース接続エラーの場合
+    if (error.message && (
+      error.message.includes('データベース接続') ||
+      error.message.includes('connection') ||
+      error.message.includes('POSTGRES_URL') ||
+      error.message.includes('DATABASE_URL')
+    )) {
+      return res.status(503).json({ 
+        error: 'データベース接続エラー',
+        message: 'データベースに接続できません。環境変数を確認してください。',
+        haikus: [] // フロントエンドがエラーでも動作するように空配列を返す
+      });
+    }
+    
+    // その他のエラー
     res.status(500).json({ 
       error: '俳句一覧取得中にエラーが発生しました',
-      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: error.message || 'Unknown error',
+      haikus: [] // フロントエンドがエラーでも動作するように空配列を返す
     });
   }
 });

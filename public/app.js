@@ -380,15 +380,38 @@ document.addEventListener('DOMContentLoaded', function() {
             loadingIndicator.style.display = 'block';
             
             const response = await fetch('/api/haikus');
+            
+            // レスポンスのステータスを確認
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('APIエラー:', response.status, errorData);
+                
+                // エラーメッセージを表示
+                if (response.status === 503) {
+                    haikuGallery.innerHTML = '<p class="error-message">データベース接続エラーが発生しました。しばらく待ってから再度お試しください。</p>';
+                } else {
+                    haikuGallery.innerHTML = '<p class="error-message">俳句の読み込みに失敗しました。エラーコード: ' + response.status + '</p>';
+                }
+                return;
+            }
+            
             const data = await response.json();
             
-            if (data.haikus) {
+            // データが存在するか確認
+            if (data && Array.isArray(data.haikus)) {
                 displayHaikuGallery(data.haikus);
+            } else if (data && data.haikus === undefined) {
+                // レスポンスにhaikusプロパティがない場合
+                console.warn('レスポンスにhaikusプロパティがありません:', data);
+                displayHaikuGallery([]);
+            } else {
+                displayHaikuGallery(data.haikus || []);
             }
             
         } catch (error) {
             console.error('俳句ギャラリー読み込みエラー:', error);
-            haikuGallery.innerHTML = '<p class="error-message">俳句の読み込みに失敗しました。</p>';
+            console.error('エラーの詳細:', error.message);
+            haikuGallery.innerHTML = '<p class="error-message">俳句の読み込みに失敗しました。ネットワークエラーの可能性があります。</p>';
         } finally {
             loadingIndicator.style.display = 'none';
         }
