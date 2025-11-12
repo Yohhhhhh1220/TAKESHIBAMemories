@@ -926,12 +926,13 @@ body::before {
     .mood-options {
         gap: 1px;
         grid-template-columns: repeat(4, 1fr);
-        padding: 0 1px;
+        padding: 0;
         box-sizing: border-box;
         transform: scale(0.67);
         transform-origin: top center;
         width: 149.25%;
-        margin-left: -24.625%;
+        margin: 0 auto;
+        max-width: 100%;
     }
     
     .mood-option {
@@ -942,12 +943,12 @@ body::before {
     }
     
     .mood-emoji {
-        font-size: 0.47rem;
+        font-size: 0.65rem;
         margin-bottom: 1px;
     }
     
     .mood-text {
-        font-size: 0.3rem;
+        font-size: 0.42rem;
         width: 100%;
         text-align: center;
         line-height: 1.1;
