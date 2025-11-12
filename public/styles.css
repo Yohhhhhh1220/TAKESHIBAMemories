@@ -851,7 +851,7 @@ body::before {
         touch-action: manipulation;
     }
     
-    /* 俳句ギャラリーの最適化 */
+    /* 俳句ギャラリーの最適化（タブレット以下は1列のまま） */
     .haiku-gallery {
         grid-template-columns: 1fr;
         gap: 20px;
@@ -924,20 +924,21 @@ body::before {
     }
     
     .mood-options {
-        gap: 8px;
+        gap: 6px;
+        grid-template-columns: repeat(4, 1fr);
     }
     
     .mood-option {
-        min-height: 60px;
-        padding: 8px 4px;
+        min-height: 55px;
+        padding: 6px 2px;
     }
     
     .mood-emoji {
-        font-size: 1.2rem;
+        font-size: 1rem;
     }
     
     .mood-text {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
     }
     
     .submit-btn {
@@ -949,21 +950,35 @@ body::before {
         font-size: 1rem;
     }
     
-    .haiku-item {
-        padding: 15px 12px;
-        border-radius: 10px;
-        margin-bottom: 12px;
+    /* 俳句ギャラリーを横2列に */
+    .haiku-gallery {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
     }
     
-    .haiku-item .haiku-text {
-        font-size: 0.85rem;
-        line-height: 1.5;
+    .haiku-item {
+        padding: 12px 8px;
+        border-radius: 8px;
         margin-bottom: 10px;
     }
     
-    .haiku-meta {
+    .haiku-item .haiku-text {
         font-size: 0.7rem;
-        margin-top: 10px;
+        line-height: 1.4;
+        margin-bottom: 8px;
+    }
+    
+    .haiku-meta {
+        font-size: 0.6rem;
+        margin-top: 8px;
+    }
+    
+    .haiku-penname {
+        font-size: 0.6rem;
+    }
+    
+    .haiku-timestamp {
+        font-size: 0.55rem;
     }
 }
 
