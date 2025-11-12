@@ -923,6 +923,13 @@ body::before {
         font-size: 0.95rem;
     }
     
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
     .mood-options {
         gap: 1px;
         grid-template-columns: repeat(4, 1fr);
@@ -933,6 +940,8 @@ body::before {
         width: 100%;
         margin: 0 auto;
         max-width: 100%;
+        display: grid;
+        margin-bottom: -33%;  /* transform: scale(0.67)の影響で下のスペースを削除 */
     }
     
     .mood-option {
