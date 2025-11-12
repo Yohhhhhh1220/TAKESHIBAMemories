@@ -1,11 +1,16 @@
 // pgパッケージの読み込みをエラーハンドリング付きで行う
 let Pool;
+let pgAvailable = false;
 try {
   Pool = require('pg').Pool;
+  pgAvailable = true;
   console.log('✅ pg パッケージが読み込まれました');
 } catch (error) {
   console.error('❌ pg パッケージの読み込みエラー:', error);
-  throw new Error('pg パッケージが見つかりません。npm install pg を実行してください。');
+  console.warn('⚠️  pg パッケージが見つかりません。データベース機能は無効化されます。');
+  console.warn('⚠️  アプリケーションは動作を続けますが、データベース機能は利用できません。');
+  // エラーをスローせず、pgAvailable = falseのまま続行
+  pgAvailable = false;
 }
 
 // データベース接続プール
@@ -17,6 +22,11 @@ let initializationPromise = null;
  * データベース接続プールを取得または作成
  */
 function getPool() {
+  // pgパッケージが利用できない場合はエラーをスロー
+  if (!pgAvailable) {
+    throw new Error('pg パッケージが利用できません。データベース機能は無効化されています。');
+  }
+  
   if (!pool) {
     try {
       // 接続文字列を取得（優先順位: POSTGRES_URL > DATABASE_URL > 個別設定）
@@ -71,6 +81,11 @@ function getPool() {
  * SQLクエリを実行
  */
 async function query(text, params) {
+  // pgパッケージが利用できない場合はエラーをスロー
+  if (!pgAvailable) {
+    throw new Error('pg パッケージが利用できません。データベース機能は無効化されています。');
+  }
+  
   try {
     const client = getPool();
     if (!client) {
@@ -90,6 +105,12 @@ async function query(text, params) {
  * データベーステーブルを初期化
  */
 async function initializeDatabase() {
+  // pgパッケージが利用できない場合は何もしない
+  if (!pgAvailable) {
+    console.warn('⚠️  pg パッケージが利用できないため、データベース初期化をスキップします。');
+    return;
+  }
+  
   // 既に初期化済みの場合はスキップ
   if (isInitialized) {
     return;
@@ -286,6 +307,12 @@ async function getHaikusByLocation(locationId) {
  * @returns {Promise<Array>} 俳句リスト
  */
 async function getAllHaikus() {
+  // pgパッケージが利用できない場合は空配列を返す
+  if (!pgAvailable) {
+    console.warn('⚠️  pg パッケージが利用できないため、空配列を返します。');
+    return [];
+  }
+  
   try {
     // データベースが初期化されていることを確認
     if (!isInitialized) {
