@@ -428,11 +428,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // 最新順にソート（表示数の制限なし - 全ての俳句を表示）
+        // 最新順にソート（既にサーバー側でソート済みだが、念のため）
         haikus.sort((a, b) => new Date(b.created_at || b.timestamp) - new Date(a.created_at || a.timestamp));
         
-        // 全ての俳句を表示（制限なし）
-        console.log(`俳句を表示中: ${haikus.length}件`);
+        // 最新20件の俳句を表示
+        console.log(`俳句を表示中: ${haikus.length}件（最新20件まで）`);
         haikus.forEach((haiku, index) => {
             addHaikuToGallery(haiku);
         });

@@ -334,16 +334,17 @@ async function getAllHaikus() {
       }
     }
     
-    console.log('全俳句を取得中...');
+    console.log('最新20件の俳句を取得中...');
     const result = await query(
       `SELECT DISTINCT h.haiku_text as haiku, s.location_id, s.penname, h.created_at, h.id
        FROM haikus h
        JOIN surveys s ON h.survey_id = s.id
-       ORDER BY h.created_at DESC`
+       ORDER BY h.created_at DESC
+       LIMIT 20`
     );
     
     const haikus = result.rows || [];
-    console.log(`取得した俳句数: ${haikus.length}件`);
+    console.log(`取得した俳句数: ${haikus.length}件（最新20件まで）`);
     
     return haikus;
   } catch (error) {
