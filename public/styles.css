@@ -940,6 +940,8 @@ body::before {
         min-height: 50px;
         padding: 6px 4px;
         box-sizing: border-box;
+        touch-action: pan-y;
+        -webkit-tap-highlight-color: transparent;
     }
     
     .mood-emoji {
