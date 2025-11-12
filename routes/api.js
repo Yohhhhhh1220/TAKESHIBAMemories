@@ -195,43 +195,35 @@ router.get('/haikus', async (req, res) => {
   try {
     // データベース接続の確認と初期化
     const { initializeDatabase, getAllHaikus } = require('../services/postgresService');
+    
+    // 初期化を試みる（エラーでも続行）
     try {
       await initializeDatabase();
     } catch (initError) {
       console.warn('データベース初期化警告（既に初期化済みの可能性）:', initError.message);
+      // 初期化エラーでも続行（getAllHaikusが空配列を返す可能性がある）
     }
     
+    // getAllHaikusは常に配列を返す（エラー時は空配列）
     const haikus = await getAllHaikus();
     
-    // 空配列の場合も正常なレスポンスとして返す
+    // 常に正常なレスポンスとして返す（空配列でもOK）
     res.json({ 
-      haikus: haikus || [],
+      haikus: Array.isArray(haikus) ? haikus : [],
       success: true 
     });
   } catch (error) {
-    console.error('俳句一覧取得エラー:', error);
+    // このcatchブロックは通常実行されない（getAllHaikusが常に配列を返すため）
+    // ただし、万が一のエラーに備えて
+    console.error('俳句一覧取得エラー（予期しないエラー）:', error);
     console.error('エラーの詳細:', error.message);
     console.error('エラーのスタック:', error.stack);
     
-    // データベース接続エラーの場合
-    if (error.message && (
-      error.message.includes('データベース接続') ||
-      error.message.includes('connection') ||
-      error.message.includes('POSTGRES_URL') ||
-      error.message.includes('DATABASE_URL')
-    )) {
-      return res.status(503).json({ 
-        error: 'データベース接続エラー',
-        message: 'データベースに接続できません。環境変数を確認してください。',
-        haikus: [] // フロントエンドがエラーでも動作するように空配列を返す
-      });
-    }
-    
-    // その他のエラー
-    res.status(500).json({ 
-      error: '俳句一覧取得中にエラーが発生しました',
-      message: error.message || 'Unknown error',
-      haikus: [] // フロントエンドがエラーでも動作するように空配列を返す
+    // エラーが発生しても空配列を返してフロントエンドが動作するようにする
+    res.status(200).json({ 
+      haikus: [],
+      success: false,
+      error: '俳句の取得中にエラーが発生しましたが、アプリケーションは動作を続けます。'
     });
   }
 });

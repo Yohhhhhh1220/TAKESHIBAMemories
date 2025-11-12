@@ -71,8 +71,11 @@ function getPool() {
  * SQLクエリを実行
  */
 async function query(text, params) {
-  const client = getPool();
   try {
+    const client = getPool();
+    if (!client) {
+      throw new Error('データベース接続プールが利用できません');
+    }
     const result = await client.query(text, params);
     return result;
   } catch (error) {
@@ -287,7 +290,12 @@ async function getAllHaikus() {
     // データベースが初期化されていることを確認
     if (!isInitialized) {
       console.log('データベースが初期化されていないため、初期化を実行します...');
-      await initializeDatabase();
+      try {
+        await initializeDatabase();
+      } catch (initError) {
+        console.warn('データベース初期化エラー（続行します）:', initError.message);
+        // 初期化エラーでも続行（空配列を返す）
+      }
     }
     
     console.log('全俳句を取得中...');
@@ -307,30 +315,39 @@ async function getAllHaikus() {
     console.error('エラーの詳細:', error.message);
     console.error('エラーのスタック:', error.stack);
     
-    // テーブルが存在しない場合は空配列を返す
+    // すべてのエラーケースで空配列を返す（エラーを再スローしない）
+    // これにより、フロントエンドが常に動作する
+    
+    // テーブルが存在しない場合
     if (error.message && (
       error.message.includes('does not exist') || 
       error.message.includes('relation') ||
-      error.message.includes('no such table')
+      error.message.includes('no such table') ||
+      error.message.includes('relation "') ||
+      error.message.includes('syntax error')
     )) {
-      console.warn('⚠️  テーブルが存在しないようです。空配列を返します。');
+      console.warn('⚠️  テーブルまたはクエリエラー。空配列を返します。');
       return [];
     }
     
-    // データベース接続エラーの場合も空配列を返す（エラーを再スローしない）
+    // データベース接続エラー
     if (error.message && (
       error.message.includes('データベース接続') ||
       error.message.includes('connection') ||
       error.message.includes('POSTGRES_URL') ||
       error.message.includes('DATABASE_URL') ||
-      error.message.includes('getPool')
+      error.message.includes('getPool') ||
+      error.message.includes('timeout') ||
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('ENOTFOUND')
     )) {
       console.warn('⚠️  データベース接続エラー。空配列を返します。');
       return [];
     }
     
-    // その他のエラーは再スロー
-    throw error;
+    // その他のすべてのエラーも空配列を返す
+    console.warn('⚠️  予期しないエラーが発生しましたが、空配列を返して続行します。');
+    return [];
   }
 }
 
