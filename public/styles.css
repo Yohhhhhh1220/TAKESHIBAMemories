@@ -938,7 +938,17 @@ body::before {
     }
     
     .mood-text {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
+        width: 100%;
+        text-align: center;
+        line-height: 1.2;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        max-height: 2.4em;
     }
     
     .submit-btn {
@@ -952,7 +962,7 @@ body::before {
     
     /* 俳句ギャラリーを横2列に */
     .haiku-gallery {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, 1fr) !important;
         gap: 10px;
     }
     
