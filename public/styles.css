@@ -929,8 +929,8 @@ body::before {
         padding: 0;
         box-sizing: border-box;
         transform: scale(0.67);
-        transform-origin: top center;
-        width: 149.25%;
+        transform-origin: center top;
+        width: 100%;
         margin: 0 auto;
         max-width: 100%;
     }
