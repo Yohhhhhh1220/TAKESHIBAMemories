@@ -7,8 +7,17 @@ try {
   console.log('✅ pg パッケージが読み込まれました');
 } catch (error) {
   console.error('❌ pg パッケージの読み込みエラー:', error);
+  console.error('エラーの詳細:', error.message);
+  console.error('エラーのコード:', error.code);
+  
+  // Vercel環境の場合、@vercel/postgresを試す
+  if (process.env.VERCEL || process.env.VERCEL_ENV) {
+    console.warn('⚠️  Vercel環境を検出しました。@vercel/postgresの使用を検討してください。');
+  }
+  
   console.warn('⚠️  pg パッケージが見つかりません。データベース機能は無効化されます。');
   console.warn('⚠️  アプリケーションは動作を続けますが、データベース機能は利用できません。');
+  console.warn('⚠️  デプロイ環境でpgパッケージがインストールされているか確認してください。');
   // エラーをスローせず、pgAvailable = falseのまま続行
   pgAvailable = false;
 }
