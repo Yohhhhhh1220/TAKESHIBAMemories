@@ -17,7 +17,6 @@
             height: 100vh;
         }
 
-        /* 圓光寺風のテクスチャ背景 */
         body::before {
             content: '';
             position: fixed;
@@ -124,7 +123,7 @@
             font-family: 'Shippori Mincho', serif;
             min-height: 8em;
             display: flex;
-            flex-direction: row; /* 縦書きでは行が横（右から左）に並ぶ */
+            flex-direction: row-reverse; /* 縦書きでは行が横（右から左）に並ぶ */
             justify-content: center;
             align-items: stretch;
             gap: 1.2em; /* 行間 */
@@ -225,22 +224,6 @@
     <script>
         const haikusContainer = document.getElementById('haikus-container');
         
-        // 場所名のマッピング
-        const locationNames = {
-            'takeshiba-station': '竹芝駅',
-            'takeshiba-pier': '竹芝桟橋',
-            'takeshiba-park': '竹芝公園',
-            'takeshiba-building': '竹芝ビル',
-            'chair': '椅子',
-            'elevator': 'エレベーター',
-            'exhibition': '展示',
-            'garden': '庭園',
-            'restaurant': 'レストラン'
-        };
-
-        function getLocationName(locationId) {
-            return locationNames[locationId] || locationId || '竹芝エリア';
-        }
 
         // 俳句を読み込む
         async function loadHaikus() {
@@ -281,13 +264,10 @@
         // 俳句を5-7-5の3行に整形する関数
         function formatHaikuToThreeLines(haikuText) {
             if (!haikuText || haikuText.trim() === '') {
-                return '俳句を生成中...\n\n';
+                return ['俳句を生成中...', '', ''];
             }
             
-            // 既存の改行を除去して1行に
-            const cleaned = haikuText.trim().replace(/\s+/g, '').replace(/[\n\r]+/g, '');
-            
-            // 既に改行がある場合は、その改行を保持して確認
+            // 既存の改行がある場合は、その改行を保持して確認
             const originalLines = haikuText.trim().split(/[\n\r]+/).filter(line => line.trim() !== '');
             
             // 既に3行になっていて、5-7-5に近い場合はそのまま使用
@@ -297,27 +277,33 @@
                 const count3 = countMorae(originalLines[2]);
                 // 5-7-5に近い場合（許容範囲：±2音）
                 if (Math.abs(count1 - 5) <= 2 && Math.abs(count2 - 7) <= 2 && Math.abs(count3 - 5) <= 2) {
-                    return originalLines.join('\n');
+                    return originalLines;
                 }
+            }
+            
+            // 既存の改行を除去して1行に
+            const cleaned = haikuText.trim().replace(/\s+/g, '').replace(/[\n\r]+/g, '');
+            
+            if (cleaned.length === 0) {
+                return ['', '', ''];
             }
             
             // 全体の文字列から5-7-5に分割
             const totalLength = cleaned.length;
             // 5:7:5の比率で分割（全体が17音を想定）
-            // 実際の文字数ベースで分割
             const ratio1 = 5 / 17;  // 最初の5音分
             const ratio2 = 12 / 17; // 最初の12音分（5+7）
             
             let pos1 = Math.floor(totalLength * ratio1);
             let pos2 = Math.floor(totalLength * ratio2);
             
-            // 句読点やスペースの近くで調整
+            // 句読点や切れ字の近くで調整
             const findBestSplitPoint = (targetPos, text, range = 5) => {
                 let bestPos = targetPos;
                 let bestDistance = range;
                 
+                // まず句読点や切れ字の後を探す
                 for (let i = Math.max(0, targetPos - range); i < Math.min(text.length, targetPos + range); i++) {
-                    // 句読点や切れ字の後を優先
                     if (/[、。やかなけりなり]/.test(text[i])) {
                         const distance = Math.abs(targetPos - i);
                         if (distance < bestDistance) {
@@ -326,18 +312,44 @@
                         }
                     }
                 }
+                
+                // 見つからない場合は、空白や区切り文字の後を探す
+                if (bestPos === targetPos) {
+                    for (let i = Math.max(0, targetPos - range); i < Math.min(text.length, targetPos + range); i++) {
+                        if (/[\s　]/.test(text[i])) {
+                            const distance = Math.abs(targetPos - i);
+                            if (distance < bestDistance) {
+                                bestDistance = distance;
+                                bestPos = i + 1;
+                            }
+                        }
+                    }
+                }
+                
                 return bestPos;
             };
             
             pos1 = findBestSplitPoint(pos1, cleaned);
             pos2 = findBestSplitPoint(pos2, cleaned, 8);
             
-            // 3行に分割
-            const line1 = cleaned.substring(0, pos1).trim();
-            const line2 = cleaned.substring(pos1, pos2).trim();
-            const line3 = cleaned.substring(pos2).trim();
+            // 3行に分割（必ず3行になるようにする）
+            const line1 = cleaned.substring(0, pos1).trim() || '';
+            const line2 = cleaned.substring(pos1, pos2).trim() || '';
+            const line3 = cleaned.substring(pos2).trim() || '';
             
-            return `${line1}\n${line2}\n${line3}`;
+            // 空行が含まれている場合は、均等に再分配
+            if (!line1 || !line2 || !line3) {
+                // 全体を3等分する
+                const part1 = Math.ceil(totalLength / 3);
+                const part2 = Math.ceil(totalLength * 2 / 3);
+                return [
+                    cleaned.substring(0, part1).trim() || '',
+                    cleaned.substring(part1, part2).trim() || '',
+                    cleaned.substring(part2).trim() || ''
+                ];
+            }
+            
+            return [line1, line2, line3];
         }
 
         // 俳句を表示
@@ -366,17 +378,23 @@
                     minute: '2-digit'
                 });
                 
-                // 俳句を5-7-5の3行に整形
-                const formattedHaiku = formatHaikuToThreeLines(haiku.haiku);
-                const lines = formattedHaiku.split('\n');
+                // 俳句を5-7-5の3行に整形（配列で返される）
+                const lines = formatHaikuToThreeLines(haiku.haiku);
                 
-                // 縦書き表示用に各行を縦に配置
+                // 空行をフィルタリングして、必ず3行になるようにする
+                const validLines = lines.filter(line => line && line.trim() !== '');
+                const finalLines = validLines.length >= 3 ? validLines.slice(0, 3) : 
+                                  validLines.length === 2 ? [...validLines, ''] :
+                                  validLines.length === 1 ? [validLines[0], '', ''] : ['', '', ''];
+                
+                // 縦書き表示用に各行を縦に配置（右から左に表示されるように順序を保持）
+                const penname = haiku.penname || '詠み人知らず';
                 card.innerHTML = `
                     <div class="haiku-display-text">
-                        ${lines.map((line, index) => `<span class="haiku-line" data-line="${index + 1}">${line}</span>`).join('')}
+                        ${finalLines.map((line, index) => `<span class="haiku-line" data-line="${index + 1}">${line || ''}</span>`).join('')}
                     </div>
                     <div class="haiku-display-meta">
-                        <div class="haiku-location">📍 ${getLocationName(haiku.location_id)}</div>
+                        <div class="haiku-penname">✍️ ${penname}</div>
                         <div class="haiku-timestamp">${formattedDate}</div>
                     </div>
                 `;

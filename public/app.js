@@ -17,16 +17,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // 俳句ギャラリー要素の取得
     const haikuGallery = document.getElementById('haiku-gallery');
     const loadingIndicator = document.getElementById('loading-indicator');
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    
-    // 現在のフィルター
-    let currentFilter = 'all';
     
     // 初期化
     loadHaikuGallery();
     setupEventListeners();
     setupMoodSelection();
-    handleLocationParameter();
     
     // Socket.IOでリアルタイム俳句を受信（開発環境のみ）
     if (socket) {
@@ -34,10 +29,19 @@ document.addEventListener('DOMContentLoaded', function() {
             // リアルタイムで新しい俳句が来た場合は先頭に追加
             const haikuItem = document.createElement('div');
             haikuItem.className = 'haiku-item';
+            const penname = data.penname || '詠み人知らず';
+            
+            // 俳句を3行に整形
+            const lines = formatHaikuToThreeLines(data.haiku || '俳句を生成中...');
+            const validLines = lines.filter(line => line && line.trim() !== '');
+            const finalLines = validLines.length >= 3 ? validLines.slice(0, 3) : 
+                              validLines.length === 2 ? [...validLines, ''] :
+                              validLines.length === 1 ? [validLines[0], '', ''] : ['', '', ''];
+            
             haikuItem.innerHTML = `
-                <div class="haiku-text">${data.haiku || '俳句を生成中...'}</div>
+                <div class="haiku-text">${finalLines.join('\n')}</div>
                 <div class="haiku-meta">
-                    <div class="haiku-location">${getLocationName(data.location_id)}</div>
+                    <div class="haiku-penname">✍️ ${penname}</div>
                     <div class="haiku-timestamp">${new Date(data.timestamp || data.created_at || new Date()).toLocaleString('ja-JP')}</div>
                 </div>
             `;
@@ -47,6 +51,120 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 定期的に俳句一覧を更新
     setInterval(loadHaikuGallery, 30000); // 30秒ごと
+    
+    /**
+     * 文字数をカウントする関数（俳句の音数計算）
+     */
+    function countMorae(text) {
+        if (!text) return 0;
+        let count = 0;
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            // ひらがな・カタカナ・漢字は基本的に1音
+            if (/[ぁ-んァ-ン一-龯々]/.test(char)) {
+                count++;
+            }
+            // 長音記号は音数に含めない（前の文字と合わせて1音）
+            else if (char === 'ー' || char === '−') {
+                // 前の文字と合わせて1音として扱うため、カウントしない
+            }
+            // その他の文字（句読点、スペースなど）は音数に含めない
+        }
+        return count;
+    }
+
+    /**
+     * 俳句を5-7-5の3行に整形する関数
+     */
+    function formatHaikuToThreeLines(haikuText) {
+        if (!haikuText || haikuText.trim() === '') {
+            return ['俳句を生成中...', '', ''];
+        }
+        
+        // 既存の改行がある場合は、その改行を保持して確認
+        const originalLines = haikuText.trim().split(/[\n\r]+/).filter(line => line.trim() !== '');
+        
+        // 既に3行になっていて、5-7-5に近い場合はそのまま使用
+        if (originalLines.length === 3) {
+            const count1 = countMorae(originalLines[0]);
+            const count2 = countMorae(originalLines[1]);
+            const count3 = countMorae(originalLines[2]);
+            // 5-7-5に近い場合（許容範囲：±2音）
+            if (Math.abs(count1 - 5) <= 2 && Math.abs(count2 - 7) <= 2 && Math.abs(count3 - 5) <= 2) {
+                return originalLines;
+            }
+        }
+        
+        // 既存の改行を除去して1行に
+        const cleaned = haikuText.trim().replace(/\s+/g, '').replace(/[\n\r]+/g, '');
+        
+        if (cleaned.length === 0) {
+            return ['', '', ''];
+        }
+        
+        // 全体の文字列から5-7-5に分割
+        const totalLength = cleaned.length;
+        // 5:7:5の比率で分割（全体が17音を想定）
+        const ratio1 = 5 / 17;  // 最初の5音分
+        const ratio2 = 12 / 17; // 最初の12音分（5+7）
+        
+        let pos1 = Math.floor(totalLength * ratio1);
+        let pos2 = Math.floor(totalLength * ratio2);
+        
+        // 句読点や切れ字の近くで調整
+        const findBestSplitPoint = (targetPos, text, range = 5) => {
+            let bestPos = targetPos;
+            let bestDistance = range;
+            
+            // まず句読点や切れ字の後を探す
+            for (let i = Math.max(0, targetPos - range); i < Math.min(text.length, targetPos + range); i++) {
+                if (/[、。やかなけりなり]/.test(text[i])) {
+                    const distance = Math.abs(targetPos - i);
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        bestPos = i + 1;
+                    }
+                }
+            }
+            
+            // 見つからない場合は、空白や区切り文字の後を探す
+            if (bestPos === targetPos) {
+                for (let i = Math.max(0, targetPos - range); i < Math.min(text.length, targetPos + range); i++) {
+                    if (/[\s　]/.test(text[i])) {
+                        const distance = Math.abs(targetPos - i);
+                        if (distance < bestDistance) {
+                            bestDistance = distance;
+                            bestPos = i + 1;
+                        }
+                    }
+                }
+            }
+            
+            return bestPos;
+        };
+        
+        pos1 = findBestSplitPoint(pos1, cleaned);
+        pos2 = findBestSplitPoint(pos2, cleaned, 8);
+        
+        // 3行に分割（必ず3行になるようにする）
+        const line1 = cleaned.substring(0, pos1).trim() || '';
+        const line2 = cleaned.substring(pos1, pos2).trim() || '';
+        const line3 = cleaned.substring(pos2).trim() || '';
+        
+        // 空行が含まれている場合は、均等に再分配
+        if (!line1 || !line2 || !line3) {
+            // 全体を3等分する
+            const part1 = Math.ceil(totalLength / 3);
+            const part2 = Math.ceil(totalLength * 2 / 3);
+            return [
+                cleaned.substring(0, part1).trim() || '',
+                cleaned.substring(part1, part2).trim() || '',
+                cleaned.substring(part2).trim() || ''
+            ];
+        }
+        
+        return [line1, line2, line3];
+    }
     
     /**
      * イベントリスナーの設定
@@ -59,49 +177,8 @@ document.addEventListener('DOMContentLoaded', function() {
         shareBtn.addEventListener('click', shareHaiku);
         newHaikuBtn.addEventListener('click', resetForm);
         
-        // フィルターボタン
-        filterBtns.forEach(btn => {
-            // クリックイベント
-            btn.addEventListener('click', function() {
-                selectFilter(this, filterBtns);
-            });
-            
-            // タッチイベント（モバイル最適化）
-            btn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                selectFilter(this, filterBtns);
-            });
-            
-            // キーボードアクセシビリティ
-            btn.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    selectFilter(this, filterBtns);
-                }
-            });
-        });
     }
     
-    /**
-     * フィルター選択の共通処理
-     */
-    function selectFilter(btn, filterBtns) {
-        // アクティブ状態を更新
-        filterBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        // フィルターを更新
-        currentFilter = btn.dataset.location;
-        loadHaikuGallery();
-        
-        // モバイルでの視覚的フィードバック
-        if (window.innerWidth <= 768) {
-            btn.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                btn.style.transform = '';
-            }, 150);
-        }
-    }
     
     /**
      * 感情選択の設定
@@ -241,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function() {
             purpose: formData.get('purpose'),
             mood: formData.get('mood'),
             reason: formData.get('reason'),
-            location: formData.get('location') || 'takeshiba-station'
+            penname: formData.get('penname') || '詠み人知らず'
         };
         
         // バリデーション
@@ -262,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    locationId: answers.location,
+                    locationId: 'takeshiba-station', // デフォルト値（後で削除可能）
                     answers: answers
                 })
             });
@@ -295,20 +372,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
-/**
+    /**
      * 俳句ギャラリーを読み込み
      */
     async function loadHaikuGallery() {
         try {
             loadingIndicator.style.display = 'block';
             
-            // フィルターに応じてAPIエンドポイントを選択
-            let apiUrl = '/api/haikus';
-            if (currentFilter !== 'all') {
-                apiUrl = `/api/location/${currentFilter}/haikus`;
-            }
-            
-            const response = await fetch(apiUrl);
+            const response = await fetch('/api/haikus');
             const data = await response.json();
             
             if (data.haikus) {
@@ -348,12 +419,12 @@ document.addEventListener('DOMContentLoaded', function() {
      * 俳句をギャラリーに追加
      */
     function addHaikuToGallery(haikuData) {
-        // 重複チェックを緩和：同じ俳句でも日時や場所が異なる場合は表示
-        // IDがある場合はIDで、ない場合は俳句テキスト+日時+場所で判定
+        // 重複チェックを緩和：同じ俳句でも日時やペンネームが異なる場合は表示
+        // IDがある場合はIDで、ない場合は俳句テキスト+日時+ペンネームで判定
         const existingItems = haikuGallery.querySelectorAll('.haiku-item');
         const haikuId = haikuData.id || haikuData.survey_id;
         const haikuTimestamp = haikuData.timestamp || haikuData.created_at;
-        const haikuLocation = haikuData.location_id;
+        const haikuPenname = haikuData.penname || '詠み人知らず';
         
         for (let item of existingItems) {
             const itemId = item.dataset.haikuId;
@@ -364,13 +435,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 return; // 同じIDの場合は追加しない
             }
             
-            // IDがない場合は、テキスト+日時+場所で判定（より厳密に）
+            // IDがない場合は、テキスト+日時+ペンネームで判定（より厳密に）
             if (!haikuId && itemText === haikuData.haiku) {
                 const itemTimestamp = item.dataset.timestamp;
-                const itemLocation = item.dataset.location;
+                const itemPenname = item.dataset.penname;
                 
-                // 同じテキスト、同じ日時、同じ場所の場合は重複として扱う
-                if (itemTimestamp === haikuTimestamp && itemLocation === haikuLocation) {
+                // 同じテキスト、同じ日時、同じペンネームの場合は重複として扱う
+                if (itemTimestamp === haikuTimestamp && itemPenname === haikuPenname) {
                     return;
                 }
             }
@@ -384,12 +455,19 @@ document.addEventListener('DOMContentLoaded', function() {
             haikuItem.dataset.haikuId = haikuId.toString();
         }
         haikuItem.dataset.timestamp = haikuTimestamp;
-        haikuItem.dataset.location = haikuLocation || '';
+        haikuItem.dataset.penname = haikuPenname;
+        
+        // 俳句を3行に整形
+        const lines = formatHaikuToThreeLines(haikuData.haiku || '俳句を生成中...');
+        const validLines = lines.filter(line => line && line.trim() !== '');
+        const finalLines = validLines.length >= 3 ? validLines.slice(0, 3) : 
+                          validLines.length === 2 ? [...validLines, ''] :
+                          validLines.length === 1 ? [validLines[0], '', ''] : ['', '', ''];
         
         haikuItem.innerHTML = `
-            <div class="haiku-text">${haikuData.haiku || '俳句を生成中...'}</div>
+            <div class="haiku-text">${finalLines.join('\n')}</div>
             <div class="haiku-meta">
-                <div class="haiku-location">${getLocationName(haikuData.location_id)}</div>
+                <div class="haiku-penname">✍️ ${haikuPenname}</div>
                 <div class="haiku-timestamp">${new Date(haikuTimestamp).toLocaleString('ja-JP')}</div>
             </div>
         `;
@@ -436,92 +514,4 @@ document.addEventListener('DOMContentLoaded', function() {
         form.scrollIntoView({ behavior: 'smooth' });
     }
     
-    /**
-     * URLパラメータから場所を自動選択
-     */
-    function handleLocationParameter() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const location = urlParams.get('location');
-        
-        if (location) {
-            const locationSelect = document.getElementById('location');
-            if (locationSelect) {
-                locationSelect.value = location;
-                
-                // 場所が選択されたことをユーザーに通知
-                const locationNames = {
-                    'garden': '庭',
-                    'chair': '椅子',
-                    'exhibition': '展示室',
-                    'elevator': 'エレベーター',
-                    'restaurant': 'レストラン',
-                    'other': 'その他'
-                };
-                
-                const locationName = locationNames[location] || location;
-                showLocationNotification(locationName);
-            }
-        }
-    }
-    
-    /**
-     * 場所選択通知を表示
-     */
-    function showLocationNotification(locationName) {
-        // 通知要素を作成
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 25px;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-            z-index: 1000;
-            font-size: 1rem;
-            font-weight: 500;
-            animation: slideIn 0.3s ease;
-        `;
-        notification.textContent = `📍 ${locationName} が選択されました`;
-        
-        // アニメーション用CSSを追加
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        // 通知を表示
-        document.body.appendChild(notification);
-        
-        // 3秒後に自動で削除
-        setTimeout(() => {
-            notification.style.animation = 'slideIn 0.3s ease reverse';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 3000);
-    }
-    
-    /**
-     * 場所名を取得
-     */
-    function getLocationName(locationId) {
-        const locationNames = {
-            'garden': '庭',
-            'chair': '椅子',
-            'exhibition': '展示室',
-            'elevator': 'エレベーター',
-            'restaurant': 'レストラン',
-            'other': 'その他'
-        };
-        return locationNames[locationId] || locationId || '不明な場所';
-    }
 });

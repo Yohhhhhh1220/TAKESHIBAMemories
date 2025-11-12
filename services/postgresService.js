@@ -1,53 +1,181 @@
-const { sql } = require('@vercel/postgres');
+// pgパッケージの読み込みをエラーハンドリング付きで行う
+let Pool;
+try {
+  Pool = require('pg').Pool;
+  console.log('✅ pg パッケージが読み込まれました');
+} catch (error) {
+  console.error('❌ pg パッケージの読み込みエラー:', error);
+  throw new Error('pg パッケージが見つかりません。npm install pg を実行してください。');
+}
+
+// データベース接続プール
+let pool = null;
+let isInitialized = false;
+let initializationPromise = null;
+
+/**
+ * データベース接続プールを取得または作成
+ */
+function getPool() {
+  if (!pool) {
+    try {
+      // 接続文字列を取得（優先順位: POSTGRES_URL > DATABASE_URL > 個別設定）
+      const connectionString = 
+        process.env.POSTGRES_URL || 
+        process.env.DATABASE_URL || 
+        (process.env.PGHOST ? 
+          `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD}@${process.env.PGHOST}/${process.env.PGDATABASE || 'postgres'}${process.env.PGPORT ? `:${process.env.PGPORT}` : ''}${(process.env.POSTGRES_URL && process.env.POSTGRES_URL.includes('sslmode')) || process.env.PGHOST?.includes('neon.tech') ? '?sslmode=require' : ''}` : 
+          null);
+
+      if (!connectionString) {
+        const errorMsg = 'データベース接続文字列が見つかりません。POSTGRES_URLまたはDATABASE_URLを設定してください。';
+        console.error('❌', errorMsg);
+        console.error('環境変数確認:');
+        console.error('  POSTGRES_URL:', process.env.POSTGRES_URL ? '設定済み' : '未設定');
+        console.error('  DATABASE_URL:', process.env.DATABASE_URL ? '設定済み' : '未設定');
+        console.error('  PGHOST:', process.env.PGHOST ? '設定済み' : '未設定');
+        throw new Error(errorMsg);
+      }
+
+      console.log('🗄️  データベース接続プールを作成中...');
+      console.log('接続先:', connectionString.replace(/:[^:@]+@/, ':****@')); // パスワードをマスク
+
+      pool = new Pool({
+        connectionString: connectionString,
+        ssl: connectionString.includes('sslmode=require') || connectionString.includes('neon.tech') ? {
+          rejectUnauthorized: false
+        } : false,
+        max: 20, // 最大接続数
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+      });
+
+      // 接続エラーの処理
+      pool.on('error', (err) => {
+        console.error('❌ 予期しないデータベース接続エラー:', err);
+        pool = null; // プールをリセット
+      });
+      
+      console.log('✅ データベース接続プールを作成しました');
+    } catch (error) {
+      console.error('❌ データベース接続プール作成エラー:', error);
+      console.error('エラーの詳細:', error.message);
+      throw error;
+    }
+  }
+
+  return pool;
+}
+
+/**
+ * SQLクエリを実行
+ */
+async function query(text, params) {
+  const client = getPool();
+  try {
+    const result = await client.query(text, params);
+    return result;
+  } catch (error) {
+    console.error('SQLクエリエラー:', error);
+    console.error('クエリ:', text);
+    console.error('パラメータ:', params);
+    throw error;
+  }
+}
 
 /**
  * データベーステーブルを初期化
  */
 async function initializeDatabase() {
-  try {
-    // アンケートテーブル
-    await sql`
-      CREATE TABLE IF NOT EXISTS surveys (
-        id SERIAL PRIMARY KEY,
-        location_id VARCHAR(50) NOT NULL,
-        purpose VARCHAR(50),
-        mood VARCHAR(50),
-        reason TEXT,
-        qr_code_url TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-    
-    // 俳句テーブル
-    await sql`
-      CREATE TABLE IF NOT EXISTS haikus (
-        id SERIAL PRIMARY KEY,
-        survey_id INTEGER,
-        haiku_text TEXT NOT NULL,
-        mood_category VARCHAR(50),
-        season_category VARCHAR(50),
-        location_category VARCHAR(50),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (survey_id) REFERENCES surveys (id)
-      )
-    `;
-    
-    // 感情選択統計テーブル
-    await sql`
-      CREATE TABLE IF NOT EXISTS mood_stats (
-        id SERIAL PRIMARY KEY,
-        mood VARCHAR(50) NOT NULL,
-        count INTEGER DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-    
-    console.log('✅ PostgreSQLデータベーステーブルを初期化しました');
-  } catch (error) {
-    console.error('データベース初期化エラー:', error);
-    throw error;
+  // 既に初期化済みの場合はスキップ
+  if (isInitialized) {
+    return;
   }
+  
+  // 既に初期化中の場合、そのPromiseを返す
+  if (initializationPromise) {
+    return initializationPromise;
+  }
+  
+  initializationPromise = (async () => {
+    try {
+      console.log('🗄️  データベース初期化を開始します...');
+      
+      // アンケートテーブル
+      await query(`
+        CREATE TABLE IF NOT EXISTS surveys (
+          id SERIAL PRIMARY KEY,
+          location_id VARCHAR(50) NOT NULL,
+          purpose VARCHAR(50),
+          mood VARCHAR(50),
+          reason TEXT,
+          penname VARCHAR(50),
+          qr_code_url TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      // 既存のテーブルにpennameカラムを追加（存在しない場合）
+      try {
+        await query(`
+          ALTER TABLE surveys 
+          ADD COLUMN IF NOT EXISTS penname VARCHAR(50)
+        `);
+      } catch (alterError) {
+        // カラムが既に存在する場合は無視
+        if (!alterError.message.includes('already exists') && !alterError.message.includes('duplicate column')) {
+          console.warn('⚠️  pennameカラム追加時の警告:', alterError.message);
+        }
+      }
+      
+      // 俳句テーブル
+      await query(`
+        CREATE TABLE IF NOT EXISTS haikus (
+          id SERIAL PRIMARY KEY,
+          survey_id INTEGER,
+          haiku_text TEXT NOT NULL,
+          mood_category VARCHAR(50),
+          season_category VARCHAR(50),
+          location_category VARCHAR(50),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (survey_id) REFERENCES surveys (id) ON DELETE CASCADE
+        )
+      `);
+      
+      // 感情選択統計テーブル
+      await query(`
+        CREATE TABLE IF NOT EXISTS mood_stats (
+          id SERIAL PRIMARY KEY,
+          mood VARCHAR(50) NOT NULL UNIQUE,
+          count INTEGER DEFAULT 1,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      isInitialized = true;
+      console.log('✅ PostgreSQLデータベーステーブルを初期化しました');
+    } catch (error) {
+      console.error('❌ データベース初期化エラー:', error);
+      console.error('エラーの詳細:', error.message);
+      console.error('エラーのスタック:', error.stack);
+      
+      // エラーが発生しても、テーブルが既に存在する可能性があるため、初期化済みとしてマーク
+      if (error.message && (
+        error.message.includes('already exists') ||
+        error.message.includes('duplicate key')
+      )) {
+        console.warn('⚠️  テーブルは既に存在するようです');
+        isInitialized = true;
+      } else {
+        // 重大なエラーの場合のみ再スロー
+        initializationPromise = null;
+        throw error;
+      }
+    }
+  })();
+  
+  return initializationPromise;
 }
 
 /**
@@ -58,15 +186,24 @@ async function initializeDatabase() {
  */
 async function saveSurvey(locationId, answers) {
   try {
-    const result = await sql`
-      INSERT INTO surveys (location_id, purpose, mood, reason)
-      VALUES (${locationId}, ${answers.purpose}, ${answers.mood}, ${answers.reason})
-      RETURNING id
-    `;
+    // データベースが初期化されていることを確認
+    if (!isInitialized) {
+      await initializeDatabase();
+    }
+    
+    const penname = answers.penname || '詠み人知らず';
+    
+    const result = await query(
+      `INSERT INTO surveys (location_id, purpose, mood, reason, penname)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id`,
+      [locationId, answers.purpose, answers.mood, answers.reason, penname]
+    );
     
     return result.rows[0].id;
   } catch (error) {
     console.error('アンケート保存エラー:', error);
+    console.error('エラーの詳細:', error.message);
     throw error;
   }
 }
@@ -78,9 +215,10 @@ async function saveSurvey(locationId, answers) {
  */
 async function getSurvey(surveyId) {
   try {
-    const result = await sql`
-      SELECT * FROM surveys WHERE id = ${surveyId}
-    `;
+    const result = await query(
+      `SELECT * FROM surveys WHERE id = $1`,
+      [surveyId]
+    );
     
     return result.rows[0];
   } catch (error) {
@@ -97,15 +235,22 @@ async function getSurvey(surveyId) {
  */
 async function updateSurveyWithHaiku(surveyId, haiku, musicUrl) {
   try {
+    // データベースが初期化されていることを確認
+    if (!isInitialized) {
+      await initializeDatabase();
+    }
+    
     // 俳句テーブルに保存
-    await sql`
-      INSERT INTO haikus (survey_id, haiku_text)
-      VALUES (${surveyId}, ${haiku})
-    `;
+    await query(
+      `INSERT INTO haikus (survey_id, haiku_text)
+       VALUES ($1, $2)`,
+      [surveyId, haiku]
+    );
     
     console.log(`✅ 俳句をデータベースに保存しました: ${haiku}`);
   } catch (error) {
     console.error('俳句保存エラー:', error);
+    console.error('エラーの詳細:', error.message);
     throw error;
   }
 }
@@ -117,15 +262,16 @@ async function updateSurveyWithHaiku(surveyId, haiku, musicUrl) {
  */
 async function getHaikusByLocation(locationId) {
   try {
-    const result = await sql`
-      SELECT DISTINCT h.haiku_text as haiku, s.location_id, h.created_at, h.id
-      FROM haikus h
-      JOIN surveys s ON h.survey_id = s.id
-      WHERE s.location_id = ${locationId}
-      ORDER BY h.created_at DESC
-    `;
+    const result = await query(
+      `SELECT DISTINCT h.haiku_text as haiku, s.location_id, s.penname, h.created_at, h.id
+       FROM haikus h
+       JOIN surveys s ON h.survey_id = s.id
+       WHERE s.location_id = $1
+       ORDER BY h.created_at DESC`,
+      [locationId]
+    );
     
-    return result.rows;
+    return result.rows || [];
   } catch (error) {
     console.error('場所別俳句取得エラー:', error);
     throw error;
@@ -138,16 +284,33 @@ async function getHaikusByLocation(locationId) {
  */
 async function getAllHaikus() {
   try {
-    const result = await sql`
-      SELECT DISTINCT h.haiku_text as haiku, s.location_id, h.created_at, h.id
-      FROM haikus h
-      JOIN surveys s ON h.survey_id = s.id
-      ORDER BY h.created_at DESC
-    `;
+    // データベースが初期化されていることを確認
+    if (!isInitialized) {
+      await initializeDatabase();
+    }
     
-    return result.rows;
+    const result = await query(
+      `SELECT DISTINCT h.haiku_text as haiku, s.location_id, s.penname, h.created_at, h.id
+       FROM haikus h
+       JOIN surveys s ON h.survey_id = s.id
+       ORDER BY h.created_at DESC`
+    );
+    
+    return result.rows || [];
   } catch (error) {
     console.error('全俳句取得エラー:', error);
+    console.error('エラーの詳細:', error.message);
+    
+    // テーブルが存在しない場合は空配列を返す
+    if (error.message && (
+      error.message.includes('does not exist') || 
+      error.message.includes('relation') ||
+      error.message.includes('no such table')
+    )) {
+      console.warn('⚠️  テーブルが存在しないようです。空配列を返します。');
+      return [];
+    }
+    
     throw error;
   }
 }
@@ -161,7 +324,7 @@ async function getAllHaikus() {
 async function saveLocation(locationId, name, qrCodeUrl) {
   try {
     // 場所テーブルが存在しない場合は作成
-    await sql`
+    await query(`
       CREATE TABLE IF NOT EXISTS locations (
         id SERIAL PRIMARY KEY,
         location_id VARCHAR(50) UNIQUE NOT NULL,
@@ -169,15 +332,16 @@ async function saveLocation(locationId, name, qrCodeUrl) {
         qr_code_url TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `;
+    `);
     
-    await sql`
-      INSERT INTO locations (location_id, name, qr_code_url)
-      VALUES (${locationId}, ${name}, ${qrCodeUrl})
-      ON CONFLICT (location_id) DO UPDATE SET
-        name = EXCLUDED.name,
-        qr_code_url = EXCLUDED.qr_code_url
-    `;
+    await query(
+      `INSERT INTO locations (location_id, name, qr_code_url)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (location_id) DO UPDATE SET
+         name = EXCLUDED.name,
+         qr_code_url = EXCLUDED.qr_code_url`,
+      [locationId, name, qrCodeUrl]
+    );
   } catch (error) {
     console.error('場所保存エラー:', error);
     throw error;
@@ -190,27 +354,36 @@ async function saveLocation(locationId, name, qrCodeUrl) {
  */
 async function recordMoodSelection(mood) {
   try {
+    // データベースが初期化されていることを確認
+    if (!isInitialized) {
+      await initializeDatabase();
+    }
+    
     // 既存の感情があるかチェック
-    const existing = await sql`
-      SELECT * FROM mood_stats WHERE mood = ${mood}
-    `;
+    const existing = await query(
+      `SELECT * FROM mood_stats WHERE mood = $1`,
+      [mood]
+    );
     
     if (existing.rows.length > 0) {
       // 既存の感情のカウントを増やす
-      await sql`
-        UPDATE mood_stats 
-        SET count = count + 1, updated_at = CURRENT_TIMESTAMP 
-        WHERE mood = ${mood}
-      `;
+      await query(
+        `UPDATE mood_stats 
+         SET count = count + 1, updated_at = CURRENT_TIMESTAMP 
+         WHERE mood = $1`,
+        [mood]
+      );
     } else {
       // 新しい感情を追加
-      await sql`
-        INSERT INTO mood_stats (mood, count) 
-        VALUES (${mood}, 1)
-      `;
+      await query(
+        `INSERT INTO mood_stats (mood, count) 
+         VALUES ($1, 1)`,
+        [mood]
+      );
     }
   } catch (error) {
     console.error('感情選択記録エラー:', error);
+    console.error('エラーの詳細:', error.message);
     throw error;
   }
 }
@@ -221,13 +394,13 @@ async function recordMoodSelection(mood) {
  */
 async function getMoodStats() {
   try {
-    const result = await sql`
-      SELECT mood, count, created_at, updated_at 
-      FROM mood_stats 
-      ORDER BY count DESC
-    `;
+    const result = await query(
+      `SELECT mood, count, created_at, updated_at 
+       FROM mood_stats 
+       ORDER BY count DESC`
+    );
     
-    return result.rows;
+    return result.rows || [];
   } catch (error) {
     console.error('感情統計取得エラー:', error);
     throw error;
@@ -243,23 +416,23 @@ async function getStatistics() {
     const stats = {};
     
     // 総アンケート数
-    const totalResult = await sql`SELECT COUNT(*) as total FROM surveys`;
+    const totalResult = await query(`SELECT COUNT(*) as total FROM surveys`);
     stats.totalSurveys = parseInt(totalResult.rows[0].total);
     
     // 気分別統計
-    const moodResult = await sql`
-      SELECT mood, COUNT(*) as count 
-      FROM surveys 
-      GROUP BY mood
-    `;
+    const moodResult = await query(
+      `SELECT mood, COUNT(*) as count 
+       FROM surveys 
+       GROUP BY mood`
+    );
     stats.moodDistribution = moodResult.rows;
     
     // 場所別統計
-    const locationResult = await sql`
-      SELECT location_id, COUNT(*) as count 
-      FROM surveys 
-      GROUP BY location_id
-    `;
+    const locationResult = await query(
+      `SELECT location_id, COUNT(*) as count 
+       FROM surveys 
+       GROUP BY location_id`
+    );
     stats.locationDistribution = locationResult.rows;
     
     return stats;

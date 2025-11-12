@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
             purpose: formData.get('purpose'),
             mood: formData.get('mood'),
             reason: formData.get('reason'),
-            location: formData.get('location') || locationId
+            penname: formData.get('penname') || '詠み人知らず'
         };
         
         // バリデーション

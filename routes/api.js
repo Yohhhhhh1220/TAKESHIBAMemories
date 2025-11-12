@@ -1,27 +1,107 @@
 const express = require('express');
 const router = express.Router();
-const { generateHaiku } = require('../services/haikuService');
-const { saveSurvey, getSurvey, updateSurveyWithHaiku, recordMoodSelection, getMoodStats } = require('../services/postgresService');
-const { generateLocationQRCodes, generateMainQRCode } = require('../services/qrService');
+
+// モジュールの読み込みをエラーハンドリング付きで行う
+let generateHaiku, saveSurvey, getSurvey, updateSurveyWithHaiku, recordMoodSelection;
+
+try {
+  console.log('🔄 haikuService の読み込みを開始...');
+  const haikuService = require('../services/haikuService');
+  console.log('✅ haikuService モジュール読み込み完了');
+  console.log('haikuService の内容:', Object.keys(haikuService));
+  
+  if (!haikuService || typeof haikuService.generateHaiku !== 'function') {
+    throw new Error('haikuService.generateHaiku が関数ではありません');
+  }
+  
+  generateHaiku = haikuService.generateHaiku;
+  console.log('✅ haikuService.generateHaiku が設定されました');
+} catch (error) {
+  console.error('❌ Error loading haikuService:', error);
+  console.error('エラーの詳細:', error.message);
+  console.error('エラーのスタック:', error.stack);
+  console.error('エラーの種類:', error.name);
+  console.error('エラーコード:', error.code);
+  
+  // より詳細なエラー情報をログに出力
+  if (error.code === 'MODULE_NOT_FOUND') {
+    console.error('❌ モジュールが見つかりません。ファイルパスを確認してください。');
+  }
+  
+  generateHaiku = async () => { 
+    throw new Error(`haikuService not loaded: ${error.message}`); 
+  };
+}
+
+try {
+  const postgresService = require('../services/postgresService');
+  saveSurvey = postgresService.saveSurvey;
+  getSurvey = postgresService.getSurvey;
+  updateSurveyWithHaiku = postgresService.updateSurveyWithHaiku;
+  recordMoodSelection = postgresService.recordMoodSelection;
+  console.log('✅ postgresService loaded');
+} catch (error) {
+  console.error('❌ Error loading postgresService:', error);
+  console.error('Error details:', error.message);
+  console.error('Error stack:', error.stack);
+  // フォールバック関数を設定
+  saveSurvey = async () => { throw new Error('postgresService not loaded'); };
+  getSurvey = async () => { throw new Error('postgresService not loaded'); };
+  updateSurveyWithHaiku = async () => { throw new Error('postgresService not loaded'); };
+  recordMoodSelection = async () => { throw new Error('postgresService not loaded'); };
+}
 
 // アンケート送信API
 router.post('/survey', async (req, res) => {
+  console.log('📝 /api/survey リクエスト受信');
+  console.log('リクエストボディ:', JSON.stringify(req.body, null, 2));
+  
   try {
+    // データベース接続の確認と初期化
+    console.log('🗄️  データベース初期化を開始...');
+    const postgresService = require('../services/postgresService');
+    const { initializeDatabase } = postgresService;
+    
+    try {
+      await initializeDatabase();
+      console.log('✅ データベース初期化完了');
+    } catch (initError) {
+      console.warn('⚠️  データベース初期化警告（既に初期化済みの可能性）:', initError.message);
+      console.warn('⚠️  スタック:', initError.stack);
+    }
+    
     const { locationId, answers } = req.body;
     
+    if (!locationId || !answers) {
+      console.error('❌ バリデーションエラー: locationId または answers が不足');
+      return res.status(400).json({
+        success: false,
+        error: 'locationId と answers が必要です'
+      });
+    }
+    
+    console.log('💾 アンケートデータを保存中...');
     // アンケートデータを保存
     const surveyId = await saveSurvey(locationId, answers);
+    console.log('✅ アンケート保存完了, surveyId:', surveyId);
     
     // 感情選択を記録
+    console.log('💾 感情選択を記録中...');
     await recordMoodSelection(answers.mood);
+    console.log('✅ 感情選択記録完了');
     
     // 俳句を生成
+    console.log('🎨 俳句を生成中...');
     const haiku = await generateHaiku(answers);
+    console.log('✅ 俳句生成完了:', haiku);
     
     // データベースに俳句を保存
+    console.log('💾 俳句をデータベースに保存中...');
     await updateSurveyWithHaiku(surveyId, haiku, null);
+    console.log('✅ 俳句保存完了');
     
     // 結果を返す
+    console.log('✅ アンケート処理完了, surveyId:', surveyId);
     res.json({
       success: true,
       surveyId,
@@ -31,17 +111,33 @@ router.post('/survey', async (req, res) => {
     // リアルタイムで俳句を配信（開発環境のみ）
     const io = req.app.get('io');
     if (io) {
+      const penname = answers.penname || '詠み人知らず';
       io.to(`location-${locationId}`).emit('new-haiku', {
         haiku,
+        penname,
         timestamp: new Date()
       });
     }
     
   } catch (error) {
-    console.error('アンケート処理エラー:', error);
-    res.status(500).json({
+    console.error('❌ アンケート処理エラー:', error);
+    console.error('エラーの詳細:', error.message);
+    console.error('エラーのスタック:', error.stack);
+    console.error('エラーの種類:', error.name);
+    console.error('エラーコード:', error.code);
+    console.error('エラーオブジェクト全体:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    
+    // エラーの種類に応じた適切なHTTPステータスコードを返す
+    const statusCode = error.status || 500;
+    res.status(statusCode).json({
       success: false,
-      error: 'アンケート処理中にエラーが発生しました'
+      error: 'アンケート処理中にエラーが発生しました',
+      message: error.message || 'Unknown error',
+      details: {
+        name: error.name || 'Error',
+        code: error.code || 'UNKNOWN',
+        message: error.message || 'No error message'
+      }
     });
   }
 });
@@ -50,13 +146,31 @@ router.post('/survey', async (req, res) => {
 router.get('/haiku/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const survey = await getSurvey(id);
+    const { query } = require('../services/postgresService');
     
-    if (!survey) {
+    // アンケートと俳句を結合して取得
+    const result = await query(
+      `SELECT s.*, h.haiku_text as haiku
+       FROM surveys s
+       LEFT JOIN haikus h ON h.survey_id = s.id
+       WHERE s.id = $1`,
+      [id]
+    );
+    
+    if (!result.rows || result.rows.length === 0) {
       return res.status(404).json({ error: '俳句が見つかりません' });
     }
     
-    res.json(survey);
+    const data = result.rows[0];
+    res.json({
+      id: data.id,
+      purpose: data.purpose,
+      mood: data.mood,
+      reason: data.reason,
+      penname: data.penname || '詠み人知らず',
+      haiku: data.haiku,
+      created_at: data.created_at
+    });
   } catch (error) {
     console.error('俳句取得エラー:', error);
     res.status(500).json({ error: '俳句取得中にエラーが発生しました' });
@@ -79,83 +193,26 @@ router.get('/location/:locationId/haikus', async (req, res) => {
 // 全俳句一覧取得API（フィルター用）
 router.get('/haikus', async (req, res) => {
   try {
-    const { getAllHaikus } = require('../services/postgresService');
+    // データベース接続の確認と初期化
+    const { initializeDatabase, getAllHaikus } = require('../services/postgresService');
+    try {
+      await initializeDatabase();
+    } catch (initError) {
+      console.warn('データベース初期化警告（既に初期化済みの可能性）:', initError.message);
+    }
+    
     const haikus = await getAllHaikus();
     res.json({ haikus });
   } catch (error) {
     console.error('俳句一覧取得エラー:', error);
-    res.status(500).json({ error: '俳句一覧取得中にエラーが発生しました' });
-  }
-});
-
-// 感情選択統計取得API（管理者用）
-router.get('/admin/mood-stats', async (req, res) => {
-  try {
-    const moodStats = await getMoodStats();
-    res.json({ moodStats });
-  } catch (error) {
-    console.error('感情統計取得エラー:', error);
-    res.status(500).json({ error: '感情統計取得中にエラーが発生しました' });
-  }
-});
-
-// 音楽サイト連携用：感情データ取得API
-router.get('/emotion-counts', async (req, res) => {
-  // CORS設定: 外部の音楽サイトからアクセスできるように許可（必ず最初に設定）
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  // OPTIONSリクエストへの対応 (CORSのプリフライトリクエスト)
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  try {
-    // 感情統計を取得
-    const moodStats = await getMoodStats();
-    
-    // データベースからの結果を {"Exhilarated": 10, "Calm": 5, ...} という形式に変換
-    const counts = moodStats.reduce((acc, row) => {
-      acc[row.mood] = parseInt(row.count, 10);
-      return acc;
-    }, {});
-    
-    // 集計したデータをJSONとして返す
-    res.status(200).json(counts);
-
-  } catch (error) {
-    console.error('感情データ取得エラー:', error);
-    res.status(500).json({ error: '感情データ取得中にエラーが発生しました' });
-  }
-});
-
-// QRコード生成API（管理者用）
-router.post('/admin/generate-qr', async (req, res) => {
-  try {
-    const { baseUrl } = req.body;
-    
-    if (!baseUrl) {
-      return res.status(400).json({ error: 'baseUrlが必要です' });
-    }
-    
-    // 場所別QRコードを生成
-    const locationQRCodes = await generateLocationQRCodes(baseUrl);
-    
-    // メインQRコードを生成
-    const mainQRCode = await generateMainQRCode(baseUrl);
-    
-    res.json({
-      success: true,
-      mainQRCode,
-      locationQRCodes,
-      message: 'QRコードを生成しました'
+    console.error('エラーの詳細:', error.message);
+    console.error('エラーのスタック:', error.stack);
+    res.status(500).json({ 
+      error: '俳句一覧取得中にエラーが発生しました',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
-    
-  } catch (error) {
-    console.error('QRコード生成エラー:', error);
-    res.status(500).json({ error: 'QRコード生成中にエラーが発生しました' });
   }
 });
+
 
 module.exports = router;

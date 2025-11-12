@@ -35,10 +35,8 @@ async function loadHaiku(haikuId) {
                 new Date(data.created_at).toLocaleString('ja-JP');
         }
         
-        if (data.location_id) {
-            document.getElementById('location').textContent = 
-                getLocationName(data.location_id);
-        }
+        const penname = data.penname || '詠み人知らず';
+        document.getElementById('penname').textContent = `✍️ ${penname}`;
         
         // 音楽機能は削除されました
         
@@ -50,19 +48,6 @@ async function loadHaiku(haikuId) {
 }
 
 // 音楽機能は削除されました
-
-/**
- * 場所名を取得
- */
-function getLocationName(locationId) {
-    const locationNames = {
-        'takeshiba-station': '竹芝駅',
-        'takeshiba-pier': '竹芝桟橋',
-        'takeshiba-park': '竹芝公園',
-        'takeshiba-building': '竹芝ビル'
-    };
-    return locationNames[locationId] || locationId;
-}
 
 /**
  * 俳句を共有
