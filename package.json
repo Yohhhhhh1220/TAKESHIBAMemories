@@ -1,7 +1,7 @@
 {
   "name": "takeshiba-haiku-system",
   "version": "1.0.0",
-  "description": "竹芝エリアのQRコードアンケートと俳句生成システム",
+  "description": "竹芝エリアのQRコードアンケートと川柳生成システム",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

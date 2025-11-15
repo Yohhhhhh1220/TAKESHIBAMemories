@@ -161,7 +161,7 @@ async function initializeDatabase() {
         }
       }
       
-      // 俳句テーブル
+      // 川柳テーブル
       await query(`
         CREATE TABLE IF NOT EXISTS haikus (
           id SERIAL PRIMARY KEY,
@@ -183,6 +183,18 @@ async function initializeDatabase() {
           count INTEGER DEFAULT 1,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      // いいねテーブル
+      await query(`
+        CREATE TABLE IF NOT EXISTS haiku_likes (
+          id SERIAL PRIMARY KEY,
+          haiku_id INTEGER NOT NULL,
+          user_ip VARCHAR(45),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (haiku_id) REFERENCES haikus (id) ON DELETE CASCADE,
+          UNIQUE(haiku_id, user_ip)
         )
       `);
       
@@ -261,9 +273,9 @@ async function getSurvey(surveyId) {
 }
 
 /**
- * アンケートに俳句を更新
+ * アンケートに川柳を更新
  * @param {number} surveyId - アンケートID
- * @param {string} haiku - 俳句テキスト
+ * @param {string} haiku - 川柳テキスト
  * @param {string} musicUrl - 音楽URL
  */
 async function updateSurveyWithHaiku(surveyId, haiku, musicUrl) {
@@ -273,25 +285,25 @@ async function updateSurveyWithHaiku(surveyId, haiku, musicUrl) {
       await initializeDatabase();
     }
     
-    // 俳句テーブルに保存
+    // 川柳テーブルに保存
     await query(
       `INSERT INTO haikus (survey_id, haiku_text)
        VALUES ($1, $2)`,
       [surveyId, haiku]
     );
     
-    console.log(`✅ 俳句をデータベースに保存しました: ${haiku}`);
+    console.log(`✅ 川柳をデータベースに保存しました: ${haiku}`);
   } catch (error) {
-    console.error('俳句保存エラー:', error);
+    console.error('川柳保存エラー:', error);
     console.error('エラーの詳細:', error.message);
     throw error;
   }
 }
 
 /**
- * 場所別俳句を取得
+ * 場所別川柳を取得
  * @param {string} locationId - 場所ID
- * @returns {Promise<Array>} 俳句リスト
+ * @returns {Promise<Array>} 川柳リスト
  */
 async function getHaikusByLocation(locationId) {
   try {
@@ -306,14 +318,14 @@ async function getHaikusByLocation(locationId) {
     
     return result.rows || [];
   } catch (error) {
-    console.error('場所別俳句取得エラー:', error);
+    console.error('場所別川柳取得エラー:', error);
     throw error;
   }
 }
 
 /**
- * 全俳句を取得
- * @returns {Promise<Array>} 俳句リスト
+ * 全川柳を取得
+ * @returns {Promise<Array>} 川柳リスト
  */
 async function getAllHaikus() {
   // pgパッケージが利用できない場合は空配列を返す
@@ -334,7 +346,7 @@ async function getAllHaikus() {
       }
     }
     
-    console.log('最新20件の俳句を取得中...');
+    console.log('最新20件の川柳を取得中...');
     const result = await query(
       `SELECT DISTINCT h.haiku_text as haiku, s.location_id, s.penname, h.created_at, h.id
        FROM haikus h
@@ -344,11 +356,11 @@ async function getAllHaikus() {
     );
     
     const haikus = result.rows || [];
-    console.log(`取得した俳句数: ${haikus.length}件（最新20件まで）`);
+    console.log(`取得した川柳数: ${haikus.length}件（最新20件まで）`);
     
     return haikus;
   } catch (error) {
-    console.error('全俳句取得エラー:', error);
+    console.error('全川柳取得エラー:', error);
     console.error('エラーの詳細:', error.message);
     console.error('エラーのスタック:', error.stack);
     
@@ -515,6 +527,148 @@ async function getStatistics() {
   }
 }
 
+/**
+ * 川柳にいいねを追加/削除
+ * @param {number} haikuId - 川柳ID
+ * @param {string} userIp - ユーザーIPアドレス
+ * @returns {Promise<Object>} いいね状態とカウント
+ */
+async function toggleLike(haikuId, userIp) {
+  try {
+    // 既存のいいねをチェック
+    const existing = await query(
+      `SELECT * FROM haiku_likes WHERE haiku_id = $1 AND user_ip = $2`,
+      [haikuId, userIp]
+    );
+    
+    if (existing.rows.length > 0) {
+      // いいねを削除
+      await query(
+        `DELETE FROM haiku_likes WHERE haiku_id = $1 AND user_ip = $2`,
+        [haikuId, userIp]
+      );
+      
+      // いいね数を取得
+      const countResult = await query(
+        `SELECT COUNT(*) as count FROM haiku_likes WHERE haiku_id = $1`,
+        [haikuId]
+      );
+      
+      return {
+        liked: false,
+        count: parseInt(countResult.rows[0].count)
+      };
+    } else {
+      // いいねを追加
+      await query(
+        `INSERT INTO haiku_likes (haiku_id, user_ip) VALUES ($1, $2)`,
+        [haikuId, userIp]
+      );
+      
+      // いいね数を取得
+      const countResult = await query(
+        `SELECT COUNT(*) as count FROM haiku_likes WHERE haiku_id = $1`,
+        [haikuId]
+      );
+      
+      return {
+        liked: true,
+        count: parseInt(countResult.rows[0].count)
+      };
+    }
+  } catch (error) {
+    console.error('いいね処理エラー:', error);
+    throw error;
+  }
+}
+
+/**
+ * 川柳のいいね数を取得
+ * @param {number} haikuId - 川柳ID
+ * @param {string} userIp - ユーザーIPアドレス（オプション）
+ * @returns {Promise<Object>} いいね数とユーザーのいいね状態
+ */
+async function getLikeCount(haikuId, userIp = null) {
+  try {
+    const countResult = await query(
+      `SELECT COUNT(*) as count FROM haiku_likes WHERE haiku_id = $1`,
+      [haikuId]
+    );
+    
+    let liked = false;
+    if (userIp) {
+      const userLike = await query(
+        `SELECT * FROM haiku_likes WHERE haiku_id = $1 AND user_ip = $2`,
+        [haikuId, userIp]
+      );
+      liked = userLike.rows.length > 0;
+    }
+    
+    return {
+      count: parseInt(countResult.rows[0].count),
+      liked
+    };
+  } catch (error) {
+    console.error('いいね数取得エラー:', error);
+    throw error;
+  }
+}
+
+/**
+ * 複数の川柳のいいね数を一括取得
+ * @param {Array<number>} haikuIds - 川柳IDの配列
+ * @param {string} userIp - ユーザーIPアドレス（オプション）
+ * @returns {Promise<Object>} 川柳IDをキーとしたいいね数と状態のマップ
+ */
+async function getLikeCounts(haikuIds, userIp = null) {
+  try {
+    if (!haikuIds || haikuIds.length === 0) {
+      return {};
+    }
+    
+    // いいね数を一括取得
+    const countResult = await query(
+      `SELECT haiku_id, COUNT(*) as count 
+       FROM haiku_likes 
+       WHERE haiku_id = ANY($1::int[])
+       GROUP BY haiku_id`,
+      [haikuIds]
+    );
+    
+    const counts = {};
+    countResult.rows.forEach(row => {
+      counts[row.haiku_id] = parseInt(row.count);
+    });
+    
+    // ユーザーのいいね状態を取得
+    const userLikes = {};
+    if (userIp) {
+      const userLikeResult = await query(
+        `SELECT haiku_id FROM haiku_likes 
+         WHERE haiku_id = ANY($1::int[]) AND user_ip = $2`,
+        [haikuIds, userIp]
+      );
+      userLikeResult.rows.forEach(row => {
+        userLikes[row.haiku_id] = true;
+      });
+    }
+    
+    // 結果をマージ
+    const result = {};
+    haikuIds.forEach(id => {
+      result[id] = {
+        count: counts[id] || 0,
+        liked: userLikes[id] || false
+      };
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('いいね数一括取得エラー:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   initializeDatabase,
   saveSurvey,
@@ -525,5 +679,8 @@ module.exports = {
   saveLocation,
   recordMoodSelection,
   getMoodStats,
-  getStatistics
+  getStatistics,
+  toggleLike,
+  getLikeCount,
+  getLikeCounts
 };

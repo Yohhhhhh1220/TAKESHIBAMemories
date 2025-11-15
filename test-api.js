@@ -31,8 +31,19 @@ async function testAPI() {
       max_tokens: 10
     });
 
+    // APIレスポンスの検証
+    if (!completion || !completion.choices || completion.choices.length === 0) {
+      throw new Error('APIレスポンスが無効です');
+    }
+
+    const message = completion.choices[0].message;
+    if (!message || !message.content) {
+      throw new Error('APIレスポンスにコンテンツがありません');
+    }
+
     console.log('✅ API接続成功！');
-    console.log('レスポンス:', completion.choices[0].message.content);
+    console.log('レスポンス:', message.content);
+    console.log('レスポンス全体:', JSON.stringify(completion, null, 2));
     
   } catch (error) {
     console.error('❌ API接続エラー:');

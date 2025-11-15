@@ -90,15 +90,15 @@ router.post('/survey', async (req, res) => {
     await recordMoodSelection(answers.mood);
     console.log('✅ 感情選択記録完了');
     
-    // 俳句を生成
-    console.log('🎨 俳句を生成中...');
+    // 川柳を生成
+    console.log('🎨 川柳を生成中...');
     const haiku = await generateHaiku(answers);
-    console.log('✅ 俳句生成完了:', haiku);
+    console.log('✅ 川柳生成完了:', haiku);
     
-    // データベースに俳句を保存
-    console.log('💾 俳句をデータベースに保存中...');
+    // データベースに川柳を保存
+    console.log('💾 川柳をデータベースに保存中...');
     await updateSurveyWithHaiku(surveyId, haiku, null);
-    console.log('✅ 俳句保存完了');
+    console.log('✅ 川柳保存完了');
     
     // 結果を返す
     console.log('✅ アンケート処理完了, surveyId:', surveyId);
@@ -108,7 +108,7 @@ router.post('/survey', async (req, res) => {
       haiku
     });
     
-    // リアルタイムで俳句を配信（開発環境のみ）
+    // リアルタイムで川柳を配信（開発環境のみ）
     const io = req.app.get('io');
     if (io) {
       const penname = answers.penname || '詠み人知らず';
@@ -142,13 +142,13 @@ router.post('/survey', async (req, res) => {
   }
 });
 
-// 俳句取得API
+// 川柳取得API
 router.get('/haiku/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { query } = require('../services/postgresService');
     
-    // アンケートと俳句を結合して取得
+    // アンケートと川柳を結合して取得
     const result = await query(
       `SELECT s.*, h.haiku_text as haiku
        FROM surveys s
@@ -158,7 +158,7 @@ router.get('/haiku/:id', async (req, res) => {
     );
     
     if (!result.rows || result.rows.length === 0) {
-      return res.status(404).json({ error: '俳句が見つかりません' });
+      return res.status(404).json({ error: '川柳が見つかりません' });
     }
     
     const data = result.rows[0];
@@ -172,12 +172,12 @@ router.get('/haiku/:id', async (req, res) => {
       created_at: data.created_at
     });
   } catch (error) {
-    console.error('俳句取得エラー:', error);
-    res.status(500).json({ error: '俳句取得中にエラーが発生しました' });
+    console.error('川柳取得エラー:', error);
+    res.status(500).json({ error: '川柳取得中にエラーが発生しました' });
   }
 });
 
-// 場所別の俳句一覧取得API
+// 場所別の川柳一覧取得API
 router.get('/location/:locationId/haikus', async (req, res) => {
   try {
     const { locationId } = req.params;
@@ -185,16 +185,16 @@ router.get('/location/:locationId/haikus', async (req, res) => {
     const haikus = await getHaikusByLocation(locationId);
     res.json({ haikus });
   } catch (error) {
-    console.error('俳句一覧取得エラー:', error);
-    res.status(500).json({ error: '俳句一覧取得中にエラーが発生しました' });
+    console.error('川柳一覧取得エラー:', error);
+    res.status(500).json({ error: '川柳一覧取得中にエラーが発生しました' });
   }
 });
 
-// 全俳句一覧取得API（フィルター用）
+// 全川柳一覧取得API（フィルター用）
 router.get('/haikus', async (req, res) => {
   try {
     // データベース接続の確認と初期化
-    const { initializeDatabase, getAllHaikus } = require('../services/postgresService');
+    const { initializeDatabase, getAllHaikus, getLikeCounts } = require('../services/postgresService');
     
     // 初期化を試みる（エラーでも続行）
     try {
@@ -207,15 +207,41 @@ router.get('/haikus', async (req, res) => {
     // getAllHaikusは常に配列を返す（エラー時は空配列）
     const haikus = await getAllHaikus();
     
+    // ユーザーIPを取得
+    const userIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+    
+    // いいね情報を取得
+    let likeData = {};
+    if (haikus && haikus.length > 0) {
+      const haikuIds = haikus.map(h => h.id).filter(id => id != null);
+      if (haikuIds.length > 0) {
+        try {
+          likeData = await getLikeCounts(haikuIds, userIp);
+        } catch (likeError) {
+          console.warn('いいね情報取得エラー（続行します）:', likeError.message);
+        }
+      }
+    }
+    
+    // いいね情報を川柳データに追加
+    const haikusWithLikes = haikus.map(haiku => {
+      const likeInfo = likeData[haiku.id] || { count: 0, liked: false };
+      return {
+        ...haiku,
+        likes_count: likeInfo.count,
+        liked: likeInfo.liked
+      };
+    });
+    
     // 常に正常なレスポンスとして返す（空配列でもOK）
     res.json({ 
-      haikus: Array.isArray(haikus) ? haikus : [],
+      haikus: Array.isArray(haikusWithLikes) ? haikusWithLikes : [],
       success: true 
     });
   } catch (error) {
     // このcatchブロックは通常実行されない（getAllHaikusが常に配列を返すため）
     // ただし、万が一のエラーに備えて
-    console.error('俳句一覧取得エラー（予期しないエラー）:', error);
+    console.error('川柳一覧取得エラー（予期しないエラー）:', error);
     console.error('エラーの詳細:', error.message);
     console.error('エラーのスタック:', error.stack);
     
@@ -223,10 +249,34 @@ router.get('/haikus', async (req, res) => {
     res.status(200).json({ 
       haikus: [],
       success: false,
-      error: '俳句の取得中にエラーが発生しましたが、アプリケーションは動作を続けます。'
+      error: '川柳の取得中にエラーが発生しましたが、アプリケーションは動作を続けます。'
     });
   }
 });
 
+// いいねAPI
+router.post('/haiku/:id/like', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { toggleLike } = require('../services/postgresService');
+    
+    // ユーザーIPを取得
+    const userIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+    
+    const result = await toggleLike(parseInt(id), userIp);
+    
+    res.json({
+      success: true,
+      liked: result.liked,
+      count: result.count
+    });
+  } catch (error) {
+    console.error('いいね処理エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: 'いいね処理中にエラーが発生しました'
+    });
+  }
+});
 
 module.exports = router;

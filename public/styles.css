@@ -505,20 +505,69 @@ body::before {
     text-align: center;
 }
 
-.haiku-card {
-    background: rgba(255, 255, 255, 0.95);
-    color: #2c3e50;
-    padding: 80px 60px;
-    border-radius: 30px;
-    margin-bottom: 60px;
-    box-shadow: 
-        0 30px 60px rgba(0,0,0,0.1),
-        0 0 0 1px rgba(255,255,255,0.2);
-    backdrop-filter: blur(20px);
-    position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(102, 126, 234, 0.1);
-}
+    .haiku-card {
+        background: rgba(255, 255, 255, 0.95);
+        color: #2c3e50;
+        padding: 80px 60px;
+        border-radius: 30px;
+        margin-bottom: 60px;
+        box-shadow: 
+            0 30px 60px rgba(0,0,0,0.1),
+            0 0 0 1px rgba(255,255,255,0.2);
+        backdrop-filter: blur(20px);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+    
+    /* モバイルで川柳カードを縦書き対応 */
+    @media (max-width: 768px) {
+        .haiku-card {
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .haiku-card .haiku-text {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            letter-spacing: 0.2em;
+            line-height: 1.8;
+            font-size: 1.2rem;
+            font-family: 'Shippori Mincho', serif;
+            margin: 0 auto;
+            max-width: 100%;
+            width: 100%;
+            min-height: 150px;
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+            align-items: center;
+            gap: 1em;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .haiku-card .haiku-text .haiku-line {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            display: inline-block;
+            line-height: 1.8;
+            letter-spacing: 0.2em;
+        }
+        
+        .haiku-card .haiku-meta {
+            font-size: 0.7rem !important;
+        }
+        
+        .haiku-card .haiku-meta .timestamp,
+        .haiku-card .haiku-meta .penname {
+            font-size: 0.7rem !important;
+        }
+    }
 
 .haiku-card::before {
     content: '';
@@ -581,7 +630,7 @@ body::before {
     background: #5a6fd8;
 }
 
-/* 俳句一覧 */
+/* 川柳一覧 */
 .haiku-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -822,8 +871,32 @@ body::before {
     }
     
     .haiku-text {
-        font-size: 1.4rem;
-        line-height: 2;
+        font-size: 1.2rem;
+        line-height: 1.8;
+        font-family: 'Shippori Mincho', serif;
+        /* モバイルで縦書き表示 */
+        writing-mode: vertical-rl;
+        text-orientation: upright;
+        letter-spacing: 0.2em;
+        margin: 0 auto;
+        max-width: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+        align-items: center;
+        gap: 1em;
+        padding: 20px;
+        box-sizing: border-box;
+        text-align: center;
+    }
+    
+    .haiku-text .haiku-line {
+        writing-mode: vertical-rl;
+        text-orientation: upright;
+        display: inline-block;
+        line-height: 1.8;
+        letter-spacing: 0.2em;
     }
     
     .haiku-actions {
@@ -851,7 +924,7 @@ body::before {
         touch-action: manipulation;
     }
     
-    /* 俳句ギャラリーの最適化（タブレット以下は1列のまま） */
+    /* 川柳ギャラリーの最適化（タブレット以下は1列のまま） */
     .haiku-gallery {
         grid-template-columns: 1fr;
         gap: 20px;
@@ -864,17 +937,45 @@ body::before {
     }
     
     .haiku-item .haiku-text {
-        font-size: 0.95rem;
-        line-height: 1.6;
+        font-size: 1rem;
+        line-height: 1.8;
+        font-family: 'Shippori Mincho', serif;
         margin-bottom: 12px;
+        /* モバイルで縦書き表示 */
+        writing-mode: vertical-rl;
+        text-orientation: upright;
+        letter-spacing: 0.2em;
+        margin: 0 auto 12px;
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+        align-items: center;
+        gap: 0.8em;
+        width: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+        text-align: center;
+    }
+    
+    .haiku-item .haiku-text .haiku-line {
+        writing-mode: vertical-rl;
+        text-orientation: upright;
+        display: inline-block;
+        line-height: 1.8;
+        letter-spacing: 0.2em;
     }
     
     .haiku-meta {
-        font-size: 0.75rem;
+        font-size: 0.7rem !important;
         margin-top: 12px;
         flex-direction: column;
         gap: 8px;
         align-items: flex-start;
+    }
+    
+    .haiku-meta .timestamp,
+    .haiku-meta .penname {
+        font-size: 0.7rem !important;
     }
     
     /* フッターの最適化 */
@@ -940,8 +1041,6 @@ body::before {
         min-height: 50px;
         padding: 6px 4px;
         box-sizing: border-box;
-        touch-action: pan-y;
-        -webkit-tap-highlight-color: transparent;
     }
     
     .mood-emoji {
@@ -972,7 +1071,7 @@ body::before {
         font-size: 1rem;
     }
     
-    /* 俳句ギャラリーを横2列に */
+    /* 川柳ギャラリーを横2列に */
     .haiku-gallery {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 10px;
@@ -991,16 +1090,16 @@ body::before {
     }
     
     .haiku-meta {
-        font-size: 0.25rem;
+        font-size: 0.9rem;
         margin-top: 4px;
     }
     
     .haiku-penname {
-        font-size: 0.25rem;
+        font-size: 0.9rem;
     }
     
     .haiku-timestamp {
-        font-size: 0.22rem;
+        font-size: 0.85rem;
     }
 }
 
@@ -1218,7 +1317,7 @@ body::before {
     letter-spacing: 0.02em;
 }
 
-/* 俳句フィルター */
+/* 川柳フィルター */
 .haiku-filters {
     display: flex;
     justify-content: center;
@@ -1252,7 +1351,7 @@ body::before {
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
 }
 
-/* 俳句ギャラリー */
+/* 川柳ギャラリー */
 .haiku-gallery {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -1322,7 +1421,7 @@ body::before {
     opacity: 0.8;
 }
 
-/* 俳句アクション */
+/* 川柳アクション */
 .haiku-actions {
     display: flex;
     gap: 15px;
@@ -1398,4 +1497,123 @@ body::before {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* いいねボタンのスタイル */
+.like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    color: #667eea;
+    font-weight: 500;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.like-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+}
+
+.like-btn:active {
+    transform: translateY(0);
+}
+
+.like-btn.liked {
+    background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 5px 15px rgba(255, 107, 157, 0.3);
+}
+
+.like-btn.liked:hover {
+    background: linear-gradient(135deg, #ff5a8a 0%, #ff7fa0 100%);
+    box-shadow: 0 8px 20px rgba(255, 107, 157, 0.4);
+}
+
+.like-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.like-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.like-btn:active .like-icon {
+    transform: scale(1.2);
+}
+
+.like-count {
+    font-size: 0.9rem;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* ディスプレイページ用のいいねボタンスタイル */
+.haiku-display-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.haiku-display-actions .like-btn {
+    font-size: 1.2rem;
+    padding: 15px 30px;
+}
+
+.haiku-display-actions .like-icon {
+    font-size: 1.5rem;
+}
+
+.haiku-display-actions .like-count {
+    font-size: 1.1rem;
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+    .like-btn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        gap: 6px;
+    }
+    
+    .like-icon {
+        font-size: 1rem;
+    }
+    
+    .like-count {
+        font-size: 0.85rem;
+    }
+    
+    .haiku-display-actions .like-btn {
+        font-size: 1rem;
+        padding: 12px 24px;
+    }
+    
+    .haiku-display-actions .like-icon {
+        font-size: 1.3rem;
+    }
+    
+    .haiku-display-actions .like-count {
+        font-size: 1rem;
+    }
 }

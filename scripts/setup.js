@@ -5,7 +5,7 @@ const path = require('path');
  * プロジェクトのセットアップを実行
  */
 async function setup() {
-  console.log('🎋 竹芝俳句音楽システムのセットアップを開始します...\n');
+  console.log('🎋 竹芝川柳システムのセットアップを開始します...\n');
   
   try {
     // 1. 必要なディレクトリを作成
@@ -56,7 +56,6 @@ async function setup() {
     console.log('3. http://localhost:3000 にアクセスしてください');
     console.log('\n🔑 必要なAPIキー:');
     console.log('- OpenAI API Key (ChatGPT用)');
-    console.log('- Google MusicFX API Key (音楽生成用)');
     console.log('\n📚 詳細な使用方法は README.md を参照してください');
     
   } catch (error) {

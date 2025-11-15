@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>俳句展示 - TAKESHIBA Memories</title>
+    <title>川柳展示 - TAKESHIBA Memories</title>
     <link rel="stylesheet" href="/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -207,17 +207,104 @@
                 font-size: 3rem;
             }
         }
+
+        /* モバイルデバイス（スマートフォン）対応 - 縦書き表示 */
+        @media (max-width: 768px) {
+            .display-container {
+                padding: 20px;
+            }
+
+            .display-header {
+                margin-bottom: 30px;
+            }
+
+            .display-title {
+                font-size: 2rem;
+            }
+
+            .display-logo {
+                max-width: 200px;
+            }
+
+            .display-subtitle {
+                font-size: 1.5rem;
+            }
+
+            .haikus-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                padding: 20px;
+            }
+
+            .haiku-display-card {
+                padding: 40px 30px;
+                border-radius: 20px;
+            }
+
+            .haiku-display-text {
+                font-size: 1.2rem;
+                line-height: 1.8;
+                min-height: auto;
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: center;
+                align-items: center;
+                gap: 1em;
+                width: 100%;
+                padding: 20px;
+                box-sizing: border-box;
+                text-align: center;
+            }
+
+            .haiku-line {
+                writing-mode: vertical-rl;
+                text-orientation: upright;
+                line-height: 1.8;
+                letter-spacing: 0.2em;
+                display: inline-block;
+            }
+
+            .haiku-display-meta {
+                font-size: 0.7rem !important;
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
+            .haiku-display-meta .haiku-penname,
+            .haiku-display-meta .haiku-timestamp {
+                font-size: 0.7rem !important;
+            }
+            
+            .haiku-display-actions {
+                margin-top: 20px;
+                padding-top: 15px;
+            }
+            
+            .haiku-display-actions .like-btn {
+                font-size: 1rem;
+                padding: 12px 24px;
+            }
+            
+            .haiku-display-actions .like-icon {
+                font-size: 1.2rem;
+            }
+            
+            .haiku-display-actions .like-count {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="display-container">
         <div class="display-header">
             <img src="/logo.png" alt="" class="display-logo" onerror="this.style.display='none';">
-            <p class="display-subtitle">みんなの俳句</p>
+            <p class="display-subtitle">みんなの川柳</p>
         </div>
         
         <div class="haikus-container" id="haikus-container">
-            <div class="loading-message">俳句を読み込み中...</div>
+            <div class="loading-message">川柳を読み込み中...</div>
         </div>
     </div>
 
@@ -225,7 +312,7 @@
         const haikusContainer = document.getElementById('haikus-container');
         
 
-        // 俳句を読み込む
+        // 川柳を読み込む
         async function loadHaikus() {
             try {
                 const response = await fetch('/api/haikus');
@@ -234,11 +321,11 @@
                 if (data.haikus && data.haikus.length > 0) {
                     displayHaikus(data.haikus);
                 } else {
-                    haikusContainer.innerHTML = '<div class="loading-message">まだ俳句がありません</div>';
+                    haikusContainer.innerHTML = '<div class="loading-message">まだ川柳がありません</div>';
                 }
             } catch (error) {
-                console.error('俳句読み込みエラー:', error);
-                haikusContainer.innerHTML = '<div class="error-message">俳句の読み込みに失敗しました</div>';
+                console.error('川柳読み込みエラー:', error);
+                haikusContainer.innerHTML = '<div class="error-message">川柳の読み込みに失敗しました</div>';
             }
         }
 
@@ -261,10 +348,10 @@
             return count;
         }
 
-        // 俳句を5-7-5の3行に整形する関数
+        // 川柳を5-7-5の3行に整形する関数
         function formatHaikuToThreeLines(haikuText) {
             if (!haikuText || haikuText.trim() === '') {
-                return ['俳句を生成中...', '', ''];
+                return ['川柳を生成中...', '', ''];
             }
             
             // 既存の改行がある場合は、その改行を保持して確認
@@ -352,19 +439,59 @@
             return [line1, line2, line3];
         }
 
-        // 俳句を表示
+        // いいねボタンのクリック処理
+        async function handleLikeClick(haikuId, likeBtn) {
+            try {
+                // ボタンを無効化
+                likeBtn.disabled = true;
+                
+                const response = await fetch(`/api/haiku/${haikuId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // UIを更新
+                    const likeIcon = likeBtn.querySelector('.like-icon');
+                    const likeCount = likeBtn.querySelector('.like-count');
+                    
+                    if (result.liked) {
+                        likeBtn.classList.add('liked');
+                        likeIcon.textContent = '❤️';
+                    } else {
+                        likeBtn.classList.remove('liked');
+                        likeIcon.textContent = '🤍';
+                    }
+                    
+                    likeCount.textContent = result.count;
+                } else {
+                    console.error('いいね処理エラー:', result.error);
+                }
+            } catch (error) {
+                console.error('いいね処理エラー:', error);
+            } finally {
+                // ボタンを再有効化
+                likeBtn.disabled = false;
+            }
+        }
+
+        // 川柳を表示
         function displayHaikus(haikus) {
             haikusContainer.innerHTML = '';
             
             if (!haikus || haikus.length === 0) {
-                haikusContainer.innerHTML = '<div class="loading-message">まだ俳句がありません</div>';
+                haikusContainer.innerHTML = '<div class="loading-message">まだ川柳がありません</div>';
                 return;
             }
             
             // 新しい順にソート（既にサーバー側でソート済みだが、念のため）
             haikus.sort((a, b) => new Date(b.created_at || b.timestamp) - new Date(a.created_at || a.timestamp));
             
-            // 最新20件の俳句を表示（サーバー側で既に制限済み）
+            // 最新20件の川柳を表示（サーバー側で既に制限済み）
             haikus.forEach(haiku => {
                 const card = document.createElement('div');
                 card.className = 'haiku-display-card';
@@ -378,7 +505,7 @@
                     minute: '2-digit'
                 });
                 
-                // 俳句を5-7-5の3行に整形（配列で返される）
+                // 川柳を5-7-5の3行に整形（配列で返される）
                 const lines = formatHaikuToThreeLines(haiku.haiku);
                 
                 // 空行をフィルタリングして、必ず3行になるようにする
@@ -389,6 +516,10 @@
                 
                 // 縦書き表示用に各行を縦に配置（右から左に表示されるように順序を保持）
                 const penname = haiku.penname || '詠み人知らず';
+                const haikuId = haiku.id;
+                const likesCount = haiku.likes_count || 0;
+                const isLiked = haiku.liked || false;
+                
                 card.innerHTML = `
                     <div class="haiku-display-text">
                         ${finalLines.map((line, index) => `<span class="haiku-line" data-line="${index + 1}">${line || ''}</span>`).join('')}
@@ -397,7 +528,63 @@
                         <div class="haiku-penname">✍️ ${penname}</div>
                         <div class="haiku-timestamp">${formattedDate}</div>
                     </div>
+                    ${haikuId ? `
+                    <div class="haiku-display-actions">
+                        <button class="like-btn ${isLiked ? 'liked' : ''}" data-haiku-id="${haikuId}">
+                            <span class="like-icon">${isLiked ? '❤️' : '🤍'}</span>
+                            <span class="like-count">${likesCount}</span>
+                        </button>
+                    </div>
+                    ` : ''}
                 `;
+                
+                // いいねボタンのイベントリスナーを追加（スワイプとタップを区別）
+                if (haikuId) {
+                    const likeBtn = card.querySelector('.like-btn');
+                    if (likeBtn) {
+                        let touchStartX = 0;
+                        let touchStartY = 0;
+                        let touchStartTime = 0;
+                        const SWIPE_THRESHOLD = 10; // スワイプと判定する移動距離（px）
+                        const TAP_TIME_THRESHOLD = 300; // タップと判定する時間（ms）
+                        
+                        // タッチ開始
+                        likeBtn.addEventListener('touchstart', function(e) {
+                            const touch = e.touches[0];
+                            touchStartX = touch.clientX;
+                            touchStartY = touch.clientY;
+                            touchStartTime = Date.now();
+                        }, { passive: true });
+                        
+                        // タッチ終了（タップ判定）
+                        likeBtn.addEventListener('touchend', async function(e) {
+                            const touch = e.changedTouches[0];
+                            const touchEndX = touch.clientX;
+                            const touchEndY = touch.clientY;
+                            const touchEndTime = Date.now();
+                            
+                            // 移動距離を計算
+                            const deltaX = Math.abs(touchEndX - touchStartX);
+                            const deltaY = Math.abs(touchEndY - touchStartY);
+                            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                            const touchDuration = touchEndTime - touchStartTime;
+                            
+                            // スワイプでない場合（移動距離が閾値以下）のみクリックとして処理
+                            if (distance <= SWIPE_THRESHOLD && touchDuration <= TAP_TIME_THRESHOLD) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                await handleLikeClick(haikuId, likeBtn);
+                            }
+                        }, { passive: false });
+                        
+                        // マウスクリック（デスクトップ用）
+                        likeBtn.addEventListener('click', async function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            await handleLikeClick(haikuId, likeBtn);
+                        });
+                    }
+                }
                 
                 haikusContainer.appendChild(card);
             });

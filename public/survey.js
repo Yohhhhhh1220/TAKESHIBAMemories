@@ -52,18 +52,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             
             if (result.success) {
-                // 俳句を表示
+                // 川柳を表示
                 haikuDisplay.textContent = result.haiku;
                 resultSection.style.display = 'block';
                 
                 // ページを少し下にスクロール
                 resultSection.scrollIntoView({ behavior: 'smooth' });
                 
-                // 俳句ページへのリンクを追加
+                // 川柳ページへのリンクを追加
                 setTimeout(() => {
                     const haikuLink = document.createElement('a');
                     haikuLink.href = `/haiku/${result.surveyId}`;
-                    haikuLink.textContent = '俳句を詳しく見る';
+                    haikuLink.textContent = '川柳を詳しく見る';
                     haikuLink.className = 'action-btn';
                     haikuLink.style.display = 'inline-block';
                     haikuLink.style.marginTop = '20px';
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // リアルタイム俳句受信
+    // リアルタイム川柳受信
     socket.on('new-haiku', function(data) {
         if (data.haiku) {
             haikuDisplay.textContent = data.haiku;

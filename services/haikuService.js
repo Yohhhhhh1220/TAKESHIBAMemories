@@ -47,9 +47,9 @@ function getOpenAIClient() {
 }
 
 /**
- * アンケート回答に基づいて俳句を生成
+ * アンケート回答に基づいて川柳を生成
  * @param {Object} answers - アンケート回答
- * @returns {Promise<string>} 生成された俳句
+ * @returns {Promise<string>} 生成された川柳
  */
 async function generateHaiku(answers) {
   try {
@@ -82,7 +82,7 @@ async function generateHaiku(answers) {
     const prompt = createHaikuPrompt(answers);
     
     // デバッグ用ログ
-    console.log('=== 俳句生成デバッグ情報 ===');
+    console.log('=== 川柳生成デバッグ情報 ===');
     console.log('アンケート回答:', answers);
     console.log('APIキー確認:', sanitizedKey.substring(0, 10) + '...');
     console.log('生成されたプロンプト:', prompt);
@@ -107,7 +107,7 @@ async function generateHaiku(answers) {
         // まず新しいResponses APIを試行（推奨）
         let responseText = null;
         try {
-          const systemPrompt = "あなたは竹芝エリアの雰囲気を深く理解し、訪問者の具体的な体験と感情を俳句に昇華する専門の詩人です。アンケートの詳細な内容を必ず俳句に反映し、その人の体験に特化した個性的な俳句を創作してください。伝統的な俳句の形式（5-7-5）を厳密に守りながら、現代的な感性を表現してください。竹芝エリアの特徴は、体験と自然に結びつく場合のみ柔軟に織り込んでください。";
+          const systemPrompt = "あなたは竹芝エリアの雰囲気を深く理解し、訪問者の具体的な体験と感情を川柳に昇華する専門の詩人です。アンケートの詳細な内容を必ず川柳に反映し、その人の体験に特化した個性的な川柳を創作してください。伝統的な川柳の形式（5-7-5）を厳密に守りながら、現代的な感性を表現してください。竹芝エリアの特徴は、体験と自然に結びつく場合のみ柔軟に織り込んでください。";
           
           // Responses APIを試行
           if (openai.responses && typeof openai.responses.create === 'function') {
@@ -124,7 +124,7 @@ async function generateHaiku(answers) {
             
             if (responseText && responseText.trim()) {
               haiku = responseText.trim();
-              console.log(`✅ Responses APIでモデル ${model} で俳句生成に成功しました`);
+              console.log(`✅ Responses APIでモデル ${model} で川柳生成に成功しました`);
               break;
             }
           }
@@ -148,7 +148,7 @@ async function generateHaiku(answers) {
             messages: [
               {
                 role: "system",
-                content: "あなたは竹芝エリアの雰囲気を深く理解し、訪問者の具体的な体験と感情を俳句に昇華する専門の詩人です。アンケートの詳細な内容を必ず俳句に反映し、その人の体験に特化した個性的な俳句を創作してください。伝統的な俳句の形式（5-7-5）を厳密に守りながら、現代的な感性を表現してください。竹芝エリアの特徴は、体験と自然に結びつく場合のみ柔軟に織り込んでください。"
+                content: "あなたは竹芝エリアの雰囲気を深く理解し、訪問者の具体的な体験と感情を川柳に昇華する専門の詩人です。アンケートの詳細な内容を必ず川柳に反映し、その人の体験に特化した個性的な川柳を創作してください。伝統的な川柳の形式（5-7-5）を厳密に守りながら、現代的な感性を表現してください。竹芝エリアの特徴は、体験と自然に結びつく場合のみ柔軟に織り込んでください。"
               },
               {
                 role: "user",
@@ -170,7 +170,7 @@ async function generateHaiku(answers) {
           }
 
           haiku = message.content.trim();
-          console.log(`✅ Chat Completions APIでモデル ${model} で俳句生成に成功しました`);
+          console.log(`✅ Chat Completions APIでモデル ${model} で川柳生成に成功しました`);
         }
         
         if (haiku) {
@@ -205,21 +205,21 @@ async function generateHaiku(answers) {
     }
     
     // 成功時のログ
-    console.log('✅ ChatGPTから俳句を生成しました:');
-    console.log('生成された俳句:', haiku);
+    console.log('✅ ChatGPTから川柳を生成しました:');
+    console.log('生成された川柳:', haiku);
     console.log('========================');
     
     return haiku;
     
   } catch (error) {
-    console.error('俳句生成エラー:', error);
+    console.error('川柳生成エラー:', error);
     console.error('エラーの詳細:', error.message);
     console.error('エラーの種類:', error.name);
     console.error('エラーのスタック:', error.stack);
     console.error('エラーのステータス:', error.status);
     console.error('エラーのレスポンス:', error.response?.data);
     
-    // エラーの種類に応じたフォールバック俳句
+    // エラーの種類に応じたフォールバック川柳
     const errorMsg = error.message || String(error);
     const errorCode = error.code || error.error?.code;
     
@@ -284,7 +284,7 @@ async function generateHaiku(answers) {
 }
 
 /**
- * アンケート回答から俳句生成用のプロンプトを作成
+ * アンケート回答から川柳生成用のプロンプトを作成
  * @param {Object} answers - アンケート回答
  * @returns {string} プロンプト
  */
@@ -322,7 +322,7 @@ function createHaikuPrompt(answers) {
     'surprised': '驚き、意外性、新鮮さ、発見の喜び'
   };
   
-  let prompt = `あなたは竹芝エリアの体験を俳句に表現する詩人です。\n\n`;
+  let prompt = `あなたは竹芝エリアの体験を川柳に表現する詩人です。\n\n`;
   prompt += `【訪問者の詳細情報】\n`;
   prompt += `・訪問目的: ${purpose} (${purposeDescriptions[purpose] || '特別な目的'})\n`;
   prompt += `・現在の気分: ${mood} (${moodDescriptions[mood] || '複雑な感情'})\n`;
@@ -331,22 +331,22 @@ function createHaikuPrompt(answers) {
     prompt += `・現在地: ${location}\n`;
   }
   
-  prompt += `\n【俳句作成の指示】\n`;
-  prompt += `1. 上記の具体的な体験内容を必ず俳句に反映してください（最優先事項）\n`;
+  prompt += `\n【川柳作成の指示】\n`;
+  prompt += `1. 上記の具体的な体験内容を必ず川柳に反映してください（最優先事項）\n`;
   prompt += `2. 訪問目的（${purpose}）の雰囲気を表現してください\n`;
-  prompt += `3. 気分（${mood}）を俳句の感情として込めてください\n`;
-  prompt += `4. 理由（"${reason}"）の内容を俳句の背景として活用してください\n`;
+  prompt += `3. 気分（${mood}）を川柳の感情として込めてください\n`;
+  prompt += `4. 理由（"${reason}"）の内容を川柳の背景として活用してください\n`;
   prompt += `5. 竹芝エリアの特徴を柔軟に織り込んでください（必須ではありません。体験を優先してください）\n`;
   prompt += `   参考となる竹芝エリアの特徴：客船ターミナル（海の玄関口）、伊豆・小笠原諸島へ向かう大型船、定期船、納涼船（夏の風物詩）、クルーズ船（シンフォニーなど）、船の汽笛、出航、入港、レインボーブリッジ、対岸の景色（お台場、豊洲など）、日の出、夕暮れ、夜景、東京ポートシティ竹芝、ウォーターズ竹芝、オフィスビル、高層ホテル、スマートシティ、巡回するロボット、最先端技術、ゆりかもめ（竹芝駅）、首都高速（浜崎橋ジャンクションの車の流れ）、モノレール（浜松町駅、空の玄関口）、空中遊歩道（ペデストリアンデッキ）、劇団四季（JR東日本四季劇場［春］［秋］）、ミュージカル、観劇後の高揚感、旅行客（島へ向かう人々）、観光客、オフィスワーカー、観劇客、テラスでくつろぐ人々\n`;
   prompt += `6. 5-7-5の音数律を厳密に守ってください\n`;
   prompt += `7. 切れ字（や、かな、けり、なり）を適切に使用してください\n`;
-  prompt += `8. 現代的な感性と伝統的な俳句の美しさを両立させてください\n\n`;
+  prompt += `8. 現代的な感性と伝統的な川柳の美しさを両立させてください\n\n`;
   
   prompt += `【重要な注意】\n`;
-  prompt += `- アンケートの内容を具体的に反映した俳句にしてください（最優先）\n`;
-  prompt += `- 一般的な俳句ではなく、この人の体験に特化した俳句にしてください\n`;
+  prompt += `- アンケートの内容を具体的に反映した川柳にしてください（最優先）\n`;
+  prompt += `- 一般的な川柳ではなく、この人の体験に特化した川柳にしてください\n`;
   prompt += `- 竹芝エリアの特徴は、体験と自然に結びつく場合のみ使用してください。無理に含める必要はありません\n`;
-  prompt += `- 俳句のみを出力し、説明は不要です\n`;
+  prompt += `- 川柳のみを出力し、説明は不要です\n`;
   
   return prompt;
 }

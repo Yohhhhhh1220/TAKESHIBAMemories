@@ -7,7 +7,7 @@ require('dotenv').config();
 // 環境変数の検証（警告のみ、起動は続行）
 if (!process.env.OPENAI_API_KEY) {
   console.warn('⚠️  警告: OPENAI_API_KEYが設定されていません');
-  console.warn('   俳句生成機能が正常に動作しない可能性があります');
+  console.warn('   川柳生成機能が正常に動作しない可能性があります');
 } else {
   const key = String(process.env.OPENAI_API_KEY).trim();
   if (!key || key.length < 20) {
@@ -110,7 +110,7 @@ app.get('/survey/:locationId', (req, res) => {
   }
 });
 
-// 俳句表示ページ
+// 川柳表示ページ
 app.get('/haiku/:id', (req, res) => {
   try {
     const htmlPath = path.join(__dirname, 'public', 'haiku.html');
@@ -190,6 +190,7 @@ module.exports = app;
 // Vercel環境では実行されない
 if (process.env.VERCEL !== '1' && !process.env.VERCEL_ENV && !process.env.VERCEL) {
   const http = require('http');
+  const os = require('os');
   const PORT = process.env.PORT || 3000;
   const server = http.createServer(app);
   
@@ -217,8 +218,27 @@ if (process.env.VERCEL !== '1' && !process.env.VERCEL_ENV && !process.env.VERCEL
   
   app.set('io', io);
   
-  server.listen(PORT, () => {
+  // ローカルIPアドレスを取得する関数
+  function getLocalIPAddress() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+        // IPv4で、内部（非ループバック）アドレスを探す
+        if (iface.family === 'IPv4' && !iface.internal) {
+          return iface.address;
+        }
+      }
+    }
+    return 'localhost';
+  }
+  
+  server.listen(PORT, '0.0.0.0', () => {
+    const localIP = getLocalIPAddress();
     console.log(`サーバーがポート ${PORT} で起動しました`);
     console.log(`TAKESHIBA Memories が稼働中です`);
+    console.log(`\n📱 スマートフォンからアクセス:`);
+    console.log(`   ローカル: http://localhost:${PORT}`);
+    console.log(`   ネットワーク: http://${localIP}:${PORT}`);
+    console.log(`\n💡 スマートフォンとPCを同じWi-Fiに接続してください\n`);
   });
 }

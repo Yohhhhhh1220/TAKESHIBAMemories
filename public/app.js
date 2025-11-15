@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const shareBtn = document.getElementById('share-btn');
     const newHaikuBtn = document.getElementById('new-haiku-btn');
     
-    // 俳句ギャラリー要素の取得
+    // 川柳ギャラリー要素の取得
     const haikuGallery = document.getElementById('haiku-gallery');
     const loadingIndicator = document.getElementById('loading-indicator');
     
@@ -23,20 +23,28 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     setupMoodSelection();
     
-    // Socket.IOでリアルタイム俳句を受信（開発環境のみ）
+    // Socket.IOでリアルタイム川柳を受信（開発環境のみ）
     if (socket) {
         socket.on('new-haiku', function(data) {
-            // リアルタイムで新しい俳句が来た場合は先頭に追加
-            const haikuItem = document.createElement('div');
-            haikuItem.className = 'haiku-item';
+            // リアルタイムで新しい川柳が来た場合は先頭に追加
+            // ただし、IDがない場合はいいね機能は使えない
+            const haikuId = data.id || data.survey_id;
             const penname = data.penname || '詠み人知らず';
+            const likesCount = data.likes_count || 0;
+            const isLiked = data.liked || false;
             
-            // 俳句を3行に整形
-            const lines = formatHaikuToThreeLines(data.haiku || '俳句を生成中...');
+            // 川柳を3行に整形
+            const lines = formatHaikuToThreeLines(data.haiku || '川柳を生成中...');
             const validLines = lines.filter(line => line && line.trim() !== '');
             const finalLines = validLines.length >= 3 ? validLines.slice(0, 3) : 
                               validLines.length === 2 ? [...validLines, ''] :
                               validLines.length === 1 ? [validLines[0], '', ''] : ['', '', ''];
+            
+            const haikuItem = document.createElement('div');
+            haikuItem.className = 'haiku-item';
+            if (haikuId) {
+                haikuItem.dataset.haikuId = haikuId.toString();
+            }
             
             haikuItem.innerHTML = `
                 <div class="haiku-text">${finalLines.join('\n')}</div>
@@ -44,16 +52,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="haiku-penname">✍️ ${penname}</div>
                     <div class="haiku-timestamp">${new Date(data.timestamp || data.created_at || new Date()).toLocaleString('ja-JP')}</div>
                 </div>
+                ${haikuId ? `
+                <div class="haiku-actions">
+                    <button class="like-btn ${isLiked ? 'liked' : ''}" data-haiku-id="${haikuId}">
+                        <span class="like-icon">${isLiked ? '❤️' : '🤍'}</span>
+                        <span class="like-count">${likesCount}</span>
+                    </button>
+                </div>
+                ` : ''}
             `;
+            
+            // いいねボタンのイベントリスナーを追加
+            if (haikuId) {
+                const likeBtn = haikuItem.querySelector('.like-btn');
+                if (likeBtn) {
+                    likeBtn.addEventListener('click', async function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        await handleLikeClick(haikuId, likeBtn);
+                    });
+                }
+            }
+            
             haikuGallery.insertBefore(haikuItem, haikuGallery.firstChild);
         });
     }
     
-    // 定期的に俳句一覧を更新
+    // 定期的に川柳一覧を更新
     setInterval(loadHaikuGallery, 30000); // 30秒ごと
     
     /**
-     * 文字数をカウントする関数（俳句の音数計算）
+     * 文字数をカウントする関数（川柳の音数計算）
      */
     function countMorae(text) {
         if (!text) return 0;
@@ -74,11 +103,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * 俳句を5-7-5の3行に整形する関数
+     * 川柳を5-7-5の3行に整形する関数
      */
     function formatHaikuToThreeLines(haikuText) {
         if (!haikuText || haikuText.trim() === '') {
-            return ['俳句を生成中...', '', ''];
+            return ['川柳を生成中...', '', ''];
         }
         
         // 既存の改行がある場合は、その改行を保持して確認
@@ -347,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             
             if (result.success) {
-                // 俳句を表示
+                // 川柳を表示
                 haikuDisplay.textContent = result.haiku;
                 resultSection.style.display = 'block';
                 
@@ -373,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
     /**
-     * 俳句ギャラリーを読み込み
+     * 川柳ギャラリーを読み込み
      */
     async function loadHaikuGallery() {
         try {
@@ -390,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.status === 503) {
                     haikuGallery.innerHTML = '<p class="error-message">データベース接続エラーが発生しました。しばらく待ってから再度お試しください。</p>';
                 } else {
-                    haikuGallery.innerHTML = '<p class="error-message">俳句の読み込みに失敗しました。エラーコード: ' + response.status + '</p>';
+                    haikuGallery.innerHTML = '<p class="error-message">川柳の読み込みに失敗しました。エラーコード: ' + response.status + '</p>';
                 }
                 return;
             }
@@ -409,45 +438,47 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
         } catch (error) {
-            console.error('俳句ギャラリー読み込みエラー:', error);
+            console.error('川柳ギャラリー読み込みエラー:', error);
             console.error('エラーの詳細:', error.message);
-            haikuGallery.innerHTML = '<p class="error-message">俳句の読み込みに失敗しました。ネットワークエラーの可能性があります。</p>';
+            haikuGallery.innerHTML = '<p class="error-message">川柳の読み込みに失敗しました。ネットワークエラーの可能性があります。</p>';
         } finally {
             loadingIndicator.style.display = 'none';
         }
     }
     
     /**
-     * 俳句ギャラリーを表示
+     * 川柳ギャラリーを表示
      */
     function displayHaikuGallery(haikus) {
         haikuGallery.innerHTML = '';
         
         if (!haikus || haikus.length === 0) {
-            haikuGallery.innerHTML = '<p class="no-haikus">まだ俳句がありません。最初の俳句を作ってみませんか？</p>';
+            haikuGallery.innerHTML = '<p class="no-haikus">まだ川柳がありません。最初の川柳を作ってみませんか？</p>';
             return;
         }
         
         // 最新順にソート（既にサーバー側でソート済みだが、念のため）
         haikus.sort((a, b) => new Date(b.created_at || b.timestamp) - new Date(a.created_at || a.timestamp));
         
-        // 最新20件の俳句を表示
-        console.log(`俳句を表示中: ${haikus.length}件（最新20件まで）`);
+        // 最新20件の川柳を表示
+        console.log(`川柳を表示中: ${haikus.length}件（最新20件まで）`);
         haikus.forEach((haiku, index) => {
             addHaikuToGallery(haiku);
         });
     }
     
     /**
-     * 俳句をギャラリーに追加
+     * 川柳をギャラリーに追加
      */
     function addHaikuToGallery(haikuData) {
-        // 重複チェックを緩和：同じ俳句でも日時やペンネームが異なる場合は表示
-        // IDがある場合はIDで、ない場合は俳句テキスト+日時+ペンネームで判定
+        // 重複チェックを緩和：同じ川柳でも日時やペンネームが異なる場合は表示
+        // IDがある場合はIDで、ない場合は川柳テキスト+日時+ペンネームで判定
         const existingItems = haikuGallery.querySelectorAll('.haiku-item');
         const haikuId = haikuData.id || haikuData.survey_id;
         const haikuTimestamp = haikuData.timestamp || haikuData.created_at;
         const haikuPenname = haikuData.penname || '詠み人知らず';
+        const likesCount = haikuData.likes_count || 0;
+        const isLiked = haikuData.liked || false;
         
         for (let item of existingItems) {
             const itemId = item.dataset.haikuId;
@@ -480,8 +511,8 @@ document.addEventListener('DOMContentLoaded', function() {
         haikuItem.dataset.timestamp = haikuTimestamp;
         haikuItem.dataset.penname = haikuPenname;
         
-        // 俳句を3行に整形
-        const lines = formatHaikuToThreeLines(haikuData.haiku || '俳句を生成中...');
+        // 川柳を3行に整形
+        const lines = formatHaikuToThreeLines(haikuData.haiku || '川柳を生成中...');
         const validLines = lines.filter(line => line && line.trim() !== '');
         const finalLines = validLines.length >= 3 ? validLines.slice(0, 3) : 
                           validLines.length === 2 ? [...validLines, ''] :
@@ -493,14 +524,74 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="haiku-penname">✍️ ${haikuPenname}</div>
                 <div class="haiku-timestamp">${new Date(haikuTimestamp).toLocaleString('ja-JP')}</div>
             </div>
+            <div class="haiku-actions">
+                <button class="like-btn ${isLiked ? 'liked' : ''}" data-haiku-id="${haikuId || ''}">
+                    <span class="like-icon">${isLiked ? '❤️' : '🤍'}</span>
+                    <span class="like-count">${likesCount}</span>
+                </button>
+            </div>
         `;
+        
+        // いいねボタンのイベントリスナーを追加
+        if (haikuId) {
+            const likeBtn = haikuItem.querySelector('.like-btn');
+            likeBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                await handleLikeClick(haikuId, likeBtn);
+            });
+        }
         
         // 末尾に追加（新しい順にソート済みなので、末尾に追加すれば新しいものが上に表示される）
         haikuGallery.appendChild(haikuItem);
     }
     
     /**
-     * 俳句を共有
+     * いいねボタンのクリック処理
+     */
+    async function handleLikeClick(haikuId, likeBtn) {
+        try {
+            // ボタンを無効化
+            likeBtn.disabled = true;
+            
+            const response = await fetch(`/api/haiku/${haikuId}/like`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // UIを更新
+                const likeIcon = likeBtn.querySelector('.like-icon');
+                const likeCount = likeBtn.querySelector('.like-count');
+                
+                if (result.liked) {
+                    likeBtn.classList.add('liked');
+                    likeIcon.textContent = '❤️';
+                } else {
+                    likeBtn.classList.remove('liked');
+                    likeIcon.textContent = '🤍';
+                }
+                
+                likeCount.textContent = result.count;
+            } else {
+                console.error('いいね処理エラー:', result.error);
+                alert('いいね処理に失敗しました');
+            }
+        } catch (error) {
+            console.error('いいね処理エラー:', error);
+            alert('いいね処理中にエラーが発生しました');
+        } finally {
+            // ボタンを再有効化
+            likeBtn.disabled = false;
+        }
+    }
+    
+    /**
+     * 川柳を共有
      */
     function shareHaiku() {
         const haikuText = haikuDisplay.textContent;
@@ -516,7 +607,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // フォールバック: クリップボードにコピー
             const shareText = `${haikuText}\n\nTAKESHIBA Memories\n${url}`;
             navigator.clipboard.writeText(shareText).then(() => {
-                alert('俳句をクリップボードにコピーしました！');
+                alert('川柳をクリップボードにコピーしました！');
             }).catch(() => {
                 alert('共有機能が利用できません。');
             });

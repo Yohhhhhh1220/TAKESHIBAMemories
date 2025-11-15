@@ -48,7 +48,7 @@ NODE_ENV=production
 ├── package.json          # 依存関係とスクリプト
 ├── services/
 │   ├── postgresService.js # PostgreSQLデータベースサービス
-│   ├── haikuService.js    # 俳句生成サービス
+│   ├── haikuService.js    # 川柳生成サービス
 │   └── qrService.js       # QRコード生成サービス
 ├── routes/
 │   ├── api.js            # APIルート
@@ -76,9 +76,9 @@ NODE_ENV=production
 ### ユーザー機能
 - QRコードスキャンでアクセス
 - 感情選択（16種類）
-- 俳句自動生成
-- 俳句共有機能
-- リアルタイム俳句表示
+- 川柳自動生成
+- 川柳共有機能
+- リアルタイム川柳表示
 
 ### 管理者機能
 - 感情選択統計表示
