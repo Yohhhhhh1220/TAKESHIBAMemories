@@ -469,7 +469,7 @@ body::before {
 
 .haiku-display {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 246, 240, 0.95) 100%);
-    padding: 80px 60px;
+    padding: 100px 80px;
     border-radius: 30px;
     margin-bottom: 40px;
     box-shadow: 
@@ -481,6 +481,10 @@ body::before {
     position: relative;
     overflow: hidden;
     transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .haiku-display::before {
@@ -542,23 +546,19 @@ body::before {
 }
 
 .haiku-display .haiku-text {
-    font-size: 2.4rem;
-    line-height: 2.8;
+    font-size: 4rem;
+    line-height: 2.5;
     color: #2c3e50;
-    font-weight: 300;
+    font-weight: bold;
     white-space: pre-line;
-    letter-spacing: 0.08em;
-    text-shadow: 
-        0 2px 8px rgba(0, 0, 0, 0.1),
-        0 1px 2px rgba(255, 255, 255, 0.8);
+    letter-spacing: 0.1em;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     position: relative;
     z-index: 1;
-    font-family: 'Noto Sans JP', sans-serif;
-    background: linear-gradient(135deg, #2c3e50 0%, #667eea 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-family: 'Shippori Mincho', serif;
     animation: textFadeIn 1.2s ease-out;
+    text-align: center;
+    width: 100%;
 }
 
 @keyframes textFadeIn {
@@ -729,17 +729,7 @@ body::before {
     text-align: center;
 }
 
-.haiku-item .haiku-text {
-    font-size: 1.2rem;
-    line-height: 1.8;
-    color: #333;
-    margin-bottom: 15px;
-}
-
-.haiku-item .haiku-meta {
-    font-size: 0.9rem;
-    color: #666;
-}
+/* 古いスタイル定義は削除 - 1464行目に新しいスタイルがあります */
 
 /* ディスプレイリンクセクション */
 .display-link-section {
@@ -956,14 +946,13 @@ body::before {
     }
     
     .haiku-display .haiku-text {
-        font-size: 1.6rem;
-        line-height: 2.2;
-        font-family: 'Noto Sans JP', sans-serif;
-        letter-spacing: 0.05em;
-        -webkit-text-fill-color: #2c3e50;
-        background: none;
-        -webkit-background-clip: unset;
-        background-clip: unset;
+        font-size: 2.5rem;
+        line-height: 2.5;
+        font-family: 'Shippori Mincho', serif;
+        font-weight: bold;
+        letter-spacing: 0.1em;
+        color: #2c3e50;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     .haiku-text .haiku-line {
@@ -1012,24 +1001,14 @@ body::before {
     }
     
     .haiku-item .haiku-text {
-        font-size: 1rem;
-        line-height: 1.8;
+        font-size: 2rem;
+        line-height: 2.5;
         font-family: 'Shippori Mincho', serif;
+        font-weight: bold;
+        letter-spacing: 0.1em;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         margin-bottom: 12px;
-        /* モバイルで縦書き表示 */
-        writing-mode: vertical-rl;
-        text-orientation: upright;
-        letter-spacing: 0.2em;
-        margin: 0 auto 12px;
-        display: flex;
-        flex-direction: row-reverse;
-        justify-content: center;
-        align-items: center;
-        gap: 0.8em;
-        width: 100%;
-        padding: 15px;
-        box-sizing: border-box;
-        text-align: center;
+        white-space: pre-line;
     }
     
     .haiku-item .haiku-text .haiku-line {
@@ -1159,9 +1138,14 @@ body::before {
     }
     
     .haiku-item .haiku-text {
-        font-size: 0.25rem;
-        line-height: 1.2;
-        margin-bottom: 3px;
+        font-size: 1.8rem;
+        line-height: 2.2;
+        font-family: 'Shippori Mincho', serif;
+        font-weight: bold;
+        letter-spacing: 0.1em;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 8px;
+        white-space: pre-line;
     }
     
     .haiku-meta {
@@ -1469,13 +1453,15 @@ body::before {
 }
 
 .haiku-item .haiku-text {
-    font-size: 1.4rem;
-    line-height: 2.2;
+    font-size: 3.5rem;
+    line-height: 2.5;
     color: #2c3e50;
     margin-bottom: 20px;
-    font-weight: 300;
-    letter-spacing: 0.05em;
+    font-weight: bold;
+    letter-spacing: 0.1em;
     white-space: pre-line;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-family: 'Shippori Mincho', serif;
 }
 
 .haiku-meta {
