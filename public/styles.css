@@ -468,23 +468,108 @@ body::before {
 }
 
 .haiku-display {
-    background: rgba(255, 255, 255, 0.8);
-    padding: 60px 50px;
-    border-radius: 25px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 246, 240, 0.95) 100%);
+    padding: 80px 60px;
+    border-radius: 30px;
     margin-bottom: 40px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    border: 1px solid rgba(102, 126, 234, 0.1);
-    backdrop-filter: blur(10px);
+    box-shadow: 
+        0 20px 60px rgba(102, 126, 234, 0.15),
+        0 0 0 1px rgba(102, 126, 234, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.haiku-text {
-    font-size: 2.2rem;
-    line-height: 2.5;
+.haiku-display::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+.haiku-display::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+    animation: pulse 4s ease-in-out infinite;
+}
+
+.haiku-display.haiku-reveal {
+    animation: haikuReveal 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes shimmer {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.1);
+    }
+}
+
+@keyframes haikuReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.haiku-display .haiku-text {
+    font-size: 2.4rem;
+    line-height: 2.8;
     color: #2c3e50;
     font-weight: 300;
     white-space: pre-line;
-    letter-spacing: 0.05em;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    letter-spacing: 0.08em;
+    text-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        0 1px 2px rgba(255, 255, 255, 0.8);
+    position: relative;
+    z-index: 1;
+    font-family: 'Noto Sans JP', sans-serif;
+    background: linear-gradient(135deg, #2c3e50 0%, #667eea 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: textFadeIn 1.2s ease-out;
+}
+
+@keyframes textFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .music-player {
@@ -866,29 +951,19 @@ body::before {
     }
     
     .haiku-display {
-        padding: 40px 20px;
-        border-radius: 15px;
+        padding: 50px 30px;
+        border-radius: 20px;
     }
     
-    .haiku-text {
-        font-size: 1.2rem;
-        line-height: 1.8;
-        font-family: 'Shippori Mincho', serif;
-        /* モバイルで縦書き表示 */
-        writing-mode: vertical-rl;
-        text-orientation: upright;
-        letter-spacing: 0.2em;
-        margin: 0 auto;
-        max-width: 100%;
-        width: 100%;
-        display: flex;
-        flex-direction: row-reverse;
-        justify-content: center;
-        align-items: center;
-        gap: 1em;
-        padding: 20px;
-        box-sizing: border-box;
-        text-align: center;
+    .haiku-display .haiku-text {
+        font-size: 1.6rem;
+        line-height: 2.2;
+        font-family: 'Noto Sans JP', sans-serif;
+        letter-spacing: 0.05em;
+        -webkit-text-fill-color: #2c3e50;
+        background: none;
+        -webkit-background-clip: unset;
+        background-clip: unset;
     }
     
     .haiku-text .haiku-line {
@@ -1419,6 +1494,31 @@ body::before {
 
 .haiku-timestamp {
     opacity: 0.8;
+}
+
+/* 川柳情報 */
+.haiku-info {
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+.haiku-info .note {
+    font-size: 1.1rem;
+    color: #7f8c8d;
+    letter-spacing: 0.02em;
+    font-weight: 300;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.generation-time-note {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    text-align: center;
+    opacity: 0.8;
+    font-style: italic;
+    letter-spacing: 0.01em;
 }
 
 /* 川柳アクション */

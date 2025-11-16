@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submit-btn');
     const resultSection = document.getElementById('result-section');
     const haikuDisplay = document.getElementById('haiku-display');
-    const shareBtn = document.getElementById('share-btn');
     const newHaikuBtn = document.getElementById('new-haiku-btn');
     
     // 川柳ギャラリー要素の取得
@@ -203,7 +202,6 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', handleFormSubmit);
         
         // ボタンイベント
-        shareBtn.addEventListener('click', shareHaiku);
         newHaikuBtn.addEventListener('click', resetForm);
         
     }
@@ -376,12 +374,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             
             if (result.success) {
-                // 川柳を表示
-                haikuDisplay.textContent = result.haiku;
+                // 川柳を表示（3行に整形）
+                const lines = formatHaikuToThreeLines(result.haiku);
+                const formattedHaiku = lines.join('\n');
+                haikuDisplay.textContent = formattedHaiku;
+                haikuDisplay.classList.add('haiku-reveal');
                 resultSection.style.display = 'block';
                 
                 // ページを少し下にスクロール
-                resultSection.scrollIntoView({ behavior: 'smooth' });
+                setTimeout(() => {
+                    resultSection.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
                 
                 // ギャラリーを更新
                 loadHaikuGallery();
@@ -587,30 +590,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } finally {
             // ボタンを再有効化
             likeBtn.disabled = false;
-        }
-    }
-    
-    /**
-     * 川柳を共有
-     */
-    function shareHaiku() {
-        const haikuText = haikuDisplay.textContent;
-        const url = window.location.href;
-        
-        if (navigator.share) {
-            navigator.share({
-                title: 'TAKESHIBA Memories',
-                text: haikuText,
-                url: url
-            });
-        } else {
-            // フォールバック: クリップボードにコピー
-            const shareText = `${haikuText}\n\nTAKESHIBA Memories\n${url}`;
-            navigator.clipboard.writeText(shareText).then(() => {
-                alert('川柳をクリップボードにコピーしました！');
-            }).catch(() => {
-                alert('共有機能が利用できません。');
-            });
         }
     }
     
