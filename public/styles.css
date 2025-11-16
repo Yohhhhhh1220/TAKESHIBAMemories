@@ -1001,12 +1001,11 @@ body::before {
     }
     
     .haiku-item .haiku-text {
-        font-size: 2rem;
-        line-height: 2.5;
-        font-family: 'Shippori Mincho', serif;
-        font-weight: bold;
-        letter-spacing: 0.1em;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        font-size: 1.2rem;
+        line-height: 1.8;
+        font-family: 'Noto Sans JP', sans-serif;
+        font-weight: 300;
+        letter-spacing: 0.05em;
         margin-bottom: 12px;
         white-space: pre-line;
     }
@@ -1138,12 +1137,11 @@ body::before {
     }
     
     .haiku-item .haiku-text {
-        font-size: 1.8rem;
-        line-height: 2.2;
-        font-family: 'Shippori Mincho', serif;
-        font-weight: bold;
-        letter-spacing: 0.1em;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        font-size: 1rem;
+        line-height: 1.8;
+        font-family: 'Noto Sans JP', sans-serif;
+        font-weight: 300;
+        letter-spacing: 0.05em;
         margin-bottom: 8px;
         white-space: pre-line;
     }
@@ -1453,15 +1451,14 @@ body::before {
 }
 
 .haiku-item .haiku-text {
-    font-size: 3.5rem;
-    line-height: 2.5;
+    font-size: 1.4rem;
+    line-height: 2.2;
     color: #2c3e50;
     margin-bottom: 20px;
-    font-weight: bold;
-    letter-spacing: 0.1em;
+    font-weight: 300;
+    letter-spacing: 0.05em;
     white-space: pre-line;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    font-family: 'Shippori Mincho', serif;
+    font-family: 'Noto Sans JP', sans-serif;
 }
 
 .haiku-meta {
