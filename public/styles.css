@@ -369,7 +369,7 @@ body::before {
 }
 
 .privacy-notice {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: #666;
     line-height: 1.6;
     margin-top: 8px;
@@ -1069,7 +1069,7 @@ body::before {
     }
     
     .privacy-notice {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         padding: 10px;
     }
     
@@ -1321,7 +1321,7 @@ body::before {
     }
     
     .privacy-notice {
-        font-size: 0.75rem;
+        font-size: 0.65rem;
         padding: 8px;
     }
     
