@@ -300,44 +300,61 @@ document.addEventListener('DOMContentLoaded', function() {
         const moodInput = document.getElementById('mood');
         
         moodOptions.forEach(option => {
-            let isTouching = false;
+            // タップかスクロールかを判定するための状態
+            let touchStartY = 0;
+            let touchStartX = 0;
+            let touchMoved = false;
             
             // クリックイベント（デスクトップ用）
             option.addEventListener('click', function(e) {
-                if (!isTouching) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('クリックイベント:', this.dataset.mood);
-                    selectMood(this, moodOptions, moodInput);
-                }
+                // マウスクリック時のみ。タッチイベントからの合成クリックはブラウザ側で抑制される。
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('クリックイベント:', this.dataset.mood);
+                selectMood(this, moodOptions, moodInput);
             });
             
             // タッチイベント（モバイル用）
             option.addEventListener('touchstart', function(e) {
-                isTouching = true;
-                e.preventDefault();
+                const touch = e.touches[0];
+                touchStartY = touch.clientY;
+                touchStartX = touch.clientX;
+                touchMoved = false;
+                // 視覚的フィードバックだけ付ける（スクロールは妨げない）
                 this.style.transform = 'scale(0.95)';
                 this.style.backgroundColor = '#f8f9ff';
                 console.log('タッチ開始:', this.dataset.mood);
-            }, { passive: false });
+            }, { passive: true });
+            
+            option.addEventListener('touchmove', function(e) {
+                const touch = e.touches[0];
+                const diffY = Math.abs(touch.clientY - touchStartY);
+                const diffX = Math.abs(touch.clientX - touchStartX);
+                // ある程度動いたら「スクロール」と判断して選択はしない
+                if (diffY > 10 || diffX > 10) {
+                    touchMoved = true;
+                    // スクロールを妨げないために preventDefault は呼ばない
+                }
+            }, { passive: true });
             
             option.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('タッチ終了:', this.dataset.mood);
-                // 少し遅延させてタッチイベントを確実に処理
-                setTimeout(() => {
-                    selectMood(this, moodOptions, moodInput);
-                }, 10);
-                isTouching = false;
+                console.log('タッチ終了:', this.dataset.mood, 'moved:', touchMoved);
                 this.style.transform = '';
                 this.style.backgroundColor = '';
-            }, { passive: false });
+                
+                // スクロールではなく「タップ」だった場合だけ選択する
+                if (!touchMoved) {
+                    // 少し遅延させてタッチイベントを確実に処理
+                    setTimeout(() => {
+                        selectMood(this, moodOptions, moodInput);
+                    }, 10);
+                }
+            }, { passive: true });
             
             option.addEventListener('touchcancel', function(e) {
-                isTouching = false;
                 this.style.transform = '';
                 this.style.backgroundColor = '';
+                touchMoved = false;
                 console.log('タッチキャンセル');
             });
             
