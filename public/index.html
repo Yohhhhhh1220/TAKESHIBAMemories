@@ -119,8 +119,18 @@
                             <input type="text" id="penname" name="penname" placeholder="無記入の場合は「詠み人知らず」と表示されます" maxlength="20">
                         </div>
                         
+                        <div class="form-group privacy-group">
+                            <div class="privacy-checkbox-container">
+                                <input type="checkbox" id="privacy-agree" name="privacy-agree" required>
+                                <label for="privacy-agree" class="privacy-label">
+                                    <a href="#" id="privacy-link" class="privacy-link">【プライバシーポリシー】</a>に同意します。
+                                </label>
+                            </div>
+                            <p class="privacy-notice">作成された川柳は、ビル内に設置されたディスプレイに表示される可能性があります。本名や連絡先など、個人情報は絶対に入力しないでください。個人を特定できる情報は収集していません。</p>
+                        </div>
+                        
                         <div class="form-actions">
-                            <button type="submit" class="submit-btn" id="submit-btn">
+                            <button type="submit" class="submit-btn" id="submit-btn" disabled>
                                 <span class="btn-text">川柳を生成する</span>
                                 <span class="btn-loading" style="display: none;">川柳生成中...</span>
                             </button>
@@ -175,6 +185,20 @@
             <p>慶應義塾大学大学院メディアデザイン研究科</p>
             <p>MeLIGHT Project</p>
         </footer>
+    </div>
+    
+    <!-- プライバシーポリシーモーダル -->
+    <div id="privacy-modal" class="privacy-modal">
+        <div class="privacy-modal-content">
+            <div class="privacy-modal-header">
+                <h2>プライバシーポリシー</h2>
+                <button class="privacy-modal-close" id="privacy-modal-close">&times;</button>
+            </div>
+            <div class="privacy-modal-body" id="privacy-modal-body">
+                <!-- プライバシーポリシーの内容は次のチャットで追加されます -->
+                <p>プライバシーポリシーの内容を読み込み中...</p>
+            </div>
+        </div>
     </div>
     
     <script src="/app.js"></script>

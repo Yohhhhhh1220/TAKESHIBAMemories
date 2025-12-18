@@ -326,6 +326,193 @@ body::before {
     min-height: 100px;
 }
 
+/* プライバシーポリシー */
+.privacy-group {
+    margin-bottom: 25px;
+}
+
+.privacy-checkbox-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.privacy-checkbox-container input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+    accent-color: #667eea;
+}
+
+.privacy-label {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    color: #2c3e50;
+    cursor: pointer;
+    line-height: 1.5;
+}
+
+.privacy-link {
+    color: #667eea;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.privacy-link:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+.privacy-notice {
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.6;
+    margin-top: 8px;
+    padding: 12px;
+    background: rgba(255, 248, 220, 0.5);
+    border-left: 3px solid #ffc107;
+    border-radius: 5px;
+}
+
+/* プライバシーポリシーモーダル */
+.privacy-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.privacy-modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 80vh;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    animation: slideDown 0.3s ease;
+    overflow: hidden;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.privacy-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 30px;
+    border-bottom: 2px solid #e9ecef;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.privacy-modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.privacy-modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: white;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+    line-height: 1;
+}
+
+.privacy-modal-close:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.privacy-modal-close:active {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.privacy-modal-body {
+    padding: 30px;
+    overflow-y: auto;
+    flex: 1;
+    line-height: 1.8;
+    color: #2c3e50;
+}
+
+.privacy-modal-body h3 {
+    font-size: 1.2rem;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    color: #667eea;
+}
+
+.privacy-modal-body h3:first-child {
+    margin-top: 0;
+}
+
+.privacy-modal-body p {
+    margin-bottom: 15px;
+}
+
+.privacy-modal-body ul {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.privacy-modal-body li {
+    margin-bottom: 8px;
+}
+
+/* 送信ボタンの無効化スタイル */
+.submit-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+}
+
+.submit-btn.disabled:hover {
+    transform: none;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+}
+
 /* 気分選択 */
 .mood-options {
     display: grid;
@@ -867,6 +1054,44 @@ body::before {
         min-height: 80px;
     }
     
+    /* プライバシーポリシーの最適化 */
+    .privacy-checkbox-container {
+        gap: 8px;
+    }
+    
+    .privacy-checkbox-container input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .privacy-label {
+        font-size: 0.95rem;
+    }
+    
+    .privacy-notice {
+        font-size: 0.8rem;
+        padding: 10px;
+    }
+    
+    .privacy-modal-content {
+        width: 95%;
+        max-height: 85vh;
+        margin: 10% auto;
+    }
+    
+    .privacy-modal-header {
+        padding: 20px;
+    }
+    
+    .privacy-modal-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .privacy-modal-body {
+        padding: 20px;
+        font-size: 0.9rem;
+    }
+    
     /* 気分選択の最適化 */
     .mood-options {
         grid-template-columns: repeat(2, 1fr);
@@ -1079,6 +1304,51 @@ body::before {
     
     .form-group {
         margin-bottom: 20px;
+    }
+    
+    /* プライバシーポリシーの最適化（小画面） */
+    .privacy-checkbox-container {
+        gap: 6px;
+    }
+    
+    .privacy-checkbox-container input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .privacy-label {
+        font-size: 0.9rem;
+    }
+    
+    .privacy-notice {
+        font-size: 0.75rem;
+        padding: 8px;
+    }
+    
+    .privacy-modal-content {
+        width: 98%;
+        max-height: 90vh;
+        margin: 5% auto;
+        border-radius: 15px;
+    }
+    
+    .privacy-modal-header {
+        padding: 15px;
+    }
+    
+    .privacy-modal-header h2 {
+        font-size: 1.1rem;
+    }
+    
+    .privacy-modal-close {
+        width: 35px;
+        height: 35px;
+        font-size: 1.5rem;
+    }
+    
+    .privacy-modal-body {
+        padding: 15px;
+        font-size: 0.85rem;
     }
     
     .mood-options {

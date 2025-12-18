@@ -13,6 +13,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const haikuDisplay = document.getElementById('haiku-display');
     const newHaikuBtn = document.getElementById('new-haiku-btn');
     
+    // プライバシーポリシー関連の要素
+    const privacyCheckbox = document.getElementById('privacy-agree');
+    const privacyLink = document.getElementById('privacy-link');
+    const privacyModal = document.getElementById('privacy-modal');
+    const privacyModalClose = document.getElementById('privacy-modal-close');
+    
     // 川柳ギャラリー要素の取得
     const haikuGallery = document.getElementById('haiku-gallery');
     const loadingIndicator = document.getElementById('loading-indicator');
@@ -21,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadHaikuGallery();
     setupEventListeners();
     setupMoodSelection();
+    setupPrivacyPolicy();
     
     // Socket.IOでリアルタイム川柳を受信（開発環境のみ）
     if (socket) {
@@ -204,6 +211,84 @@ document.addEventListener('DOMContentLoaded', function() {
         // ボタンイベント
         newHaikuBtn.addEventListener('click', resetForm);
         
+        // プライバシーポリシーチェックボックスの監視
+        if (privacyCheckbox) {
+            privacyCheckbox.addEventListener('change', updateSubmitButtonState);
+        }
+    }
+    
+    /**
+     * プライバシーポリシーの設定
+     */
+    function setupPrivacyPolicy() {
+        // プライバシーポリシーリンクのクリックイベント
+        if (privacyLink) {
+            privacyLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openPrivacyModal();
+            });
+        }
+        
+        // モーダルを閉じる
+        if (privacyModalClose) {
+            privacyModalClose.addEventListener('click', closePrivacyModal);
+        }
+        
+        // モーダルの背景をクリックして閉じる
+        if (privacyModal) {
+            privacyModal.addEventListener('click', function(e) {
+                if (e.target === privacyModal) {
+                    closePrivacyModal();
+                }
+            });
+        }
+        
+        // ESCキーでモーダルを閉じる
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && privacyModal && privacyModal.style.display === 'block') {
+                closePrivacyModal();
+            }
+        });
+        
+        // 初期状態で送信ボタンを無効化
+        updateSubmitButtonState();
+    }
+    
+    /**
+     * プライバシーポリシーモーダルを開く
+     */
+    function openPrivacyModal() {
+        if (privacyModal) {
+            privacyModal.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // 背景のスクロールを無効化
+        }
+    }
+    
+    /**
+     * プライバシーポリシーモーダルを閉じる
+     */
+    function closePrivacyModal() {
+        if (privacyModal) {
+            privacyModal.style.display = 'none';
+            document.body.style.overflow = ''; // 背景のスクロールを有効化
+        }
+    }
+    
+    /**
+     * 送信ボタンの有効/無効を更新
+     */
+    function updateSubmitButtonState() {
+        if (submitBtn && privacyCheckbox) {
+            const isChecked = privacyCheckbox.checked;
+            submitBtn.disabled = !isChecked;
+            
+            // 視覚的なフィードバック
+            if (isChecked) {
+                submitBtn.classList.remove('disabled');
+            } else {
+                submitBtn.classList.add('disabled');
+            }
+        }
     }
     
     
@@ -339,6 +424,13 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     async function handleFormSubmit(e) {
         e.preventDefault();
+        
+        // プライバシーポリシーの同意確認
+        if (!privacyCheckbox || !privacyCheckbox.checked) {
+            alert('プライバシーポリシーに同意してください。');
+            privacyLink.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
         
         const formData = new FormData(form);
         const answers = {
@@ -603,6 +695,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // 感情選択をリセット
         const moodOptions = document.querySelectorAll('.mood-option');
         moodOptions.forEach(opt => opt.classList.remove('selected'));
+        
+        // プライバシーチェックボックスの状態を更新
+        updateSubmitButtonState();
         
         form.scrollIntoView({ behavior: 'smooth' });
     }
