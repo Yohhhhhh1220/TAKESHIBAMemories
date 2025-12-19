@@ -1223,13 +1223,17 @@ body::before {
     }
     
     .haiku-item .haiku-text {
-        font-size: 1.2rem;
+        font-size: 0.85rem;
         line-height: 1.8;
         font-family: 'Noto Sans JP', sans-serif;
         font-weight: 300;
         letter-spacing: 0.05em;
         margin-bottom: 12px;
         white-space: pre-line;
+    }
+    
+    .haiku-info .note {
+        font-size: 0.75rem;
     }
     
     .haiku-item .haiku-text .haiku-line {
@@ -1404,13 +1408,17 @@ body::before {
     }
     
     .haiku-item .haiku-text {
-        font-size: 1rem;
+        font-size: 0.7rem;
         line-height: 1.8;
         font-family: 'Noto Sans JP', sans-serif;
         font-weight: 300;
         letter-spacing: 0.05em;
         margin-bottom: 8px;
         white-space: pre-line;
+    }
+    
+    .haiku-info .note {
+        font-size: 0.65rem;
     }
     
     .haiku-meta {
