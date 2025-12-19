@@ -672,6 +672,15 @@ body::before {
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 3.5rem;
+    line-height: 2.5;
+    color: #2c3e50;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-family: 'Shippori Mincho', serif;
+    flex-direction: row-reverse; /* 縦書きでは行が横（右から左）に並ぶ */
+    gap: 1.2em; /* 行間 */
 }
 
 .haiku-display::before {
@@ -732,20 +741,15 @@ body::before {
     }
 }
 
-.haiku-display .haiku-text {
-    font-size: 5.5rem;
-    line-height: 2.5;
-    color: #2c3e50;
-    font-weight: bold;
-    white-space: pre-line;
-    letter-spacing: 0.1em;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.haiku-display .haiku-line {
+    display: inline-block;
+    writing-mode: vertical-rl; /* 各行情報を縦書き */
+    text-orientation: upright; /* 文字を縦向きに */
+    line-height: 1.8;
+    letter-spacing: 0.2em;
     position: relative;
     z-index: 1;
-    font-family: 'Shippori Mincho', serif;
     animation: textFadeIn 1.2s ease-out;
-    text-align: center;
-    width: 100%;
 }
 
 @keyframes textFadeIn {
@@ -1168,19 +1172,12 @@ body::before {
     .haiku-display {
         padding: 50px 30px;
         border-radius: 20px;
+        font-size: 2rem;
+        min-height: auto;
+        gap: 1em;
     }
     
-    .haiku-display .haiku-text {
-        font-size: 3rem;
-        line-height: 2.5;
-        font-family: 'Shippori Mincho', serif;
-        font-weight: bold;
-        letter-spacing: 0.1em;
-        color: #2c3e50;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .haiku-text .haiku-line {
+    .haiku-display .haiku-line {
         writing-mode: vertical-rl;
         text-orientation: upright;
         display: inline-block;

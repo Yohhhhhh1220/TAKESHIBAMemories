@@ -435,8 +435,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 // 川柳を表示（3行に整形）
                 const lines = formatHaikuToThreeLines(result.haiku);
-                const formattedHaiku = lines.join('\n');
-                haikuDisplay.textContent = formattedHaiku;
+                const validLines = lines.filter(line => line && line.trim() !== '');
+                const finalLines = validLines.length >= 3 ? validLines.slice(0, 3) : 
+                                  validLines.length === 2 ? [...validLines, ''] :
+                                  validLines.length === 1 ? [validLines[0], '', ''] : ['', '', ''];
+                
+                // 縦書き表示用に各行をspanで囲む
+                haikuDisplay.innerHTML = finalLines.map((line, index) => 
+                    `<span class="haiku-line" data-line="${index + 1}">${line || ''}</span>`
+                ).join('');
                 haikuDisplay.classList.add('haiku-reveal');
                 resultSection.style.display = 'block';
                 
