@@ -664,6 +664,26 @@
         })();
     </script>
 
+    <!-- ホーム画面からの感情イベントを受け取って背景エフェクトを発火 -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        (function () {
+            if (typeof io === 'undefined') return;
+            const socket = io();
+            const locationId = 'takeshiba-station';
+            socket.emit('join-location', locationId);
+
+            socket.on('mood-selected', (data) => {
+                if (!data || !data.type) return;
+                if (data.type === 'positive') {
+                    if (window.triggerPositiveEmotion) window.triggerPositiveEmotion();
+                } else if (data.type === 'negative') {
+                    if (window.triggerNegativeEmotion) window.triggerNegativeEmotion();
+                }
+            });
+        })();
+    </script>
+
     <script>
         const haikusContainer = document.getElementById('haikus-container');
         // 既にエフェクトを発生させた川柳IDを記録

@@ -210,6 +210,23 @@ if (process.env.VERCEL !== '1' && !process.env.VERCEL_ENV && !process.env.VERCEL
       socket.join(`location-${locationId}`);
       console.log(`ユーザー ${socket.id} が場所 ${locationId} に参加しました`);
     });
+
+    // ホーム画面の感情選択イベントをディスプレイ側にブロードキャスト
+    socket.on('mood-selected', (data) => {
+      try {
+        const locationId = data && data.locationId ? data.locationId : 'takeshiba-station';
+        const type = data && data.type;
+        const mood = data && data.mood;
+        if (!type) return;
+        console.log(`感情イベント受信: location=${locationId}, type=${type}, mood=${mood}`);
+        io.to(`location-${locationId}`).emit('mood-selected', {
+          type,
+          mood
+        });
+      } catch (err) {
+        console.error('mood-selected イベント処理エラー:', err);
+      }
+    });
     
     socket.on('disconnect', () => {
       console.log('ユーザーが切断しました:', socket.id);

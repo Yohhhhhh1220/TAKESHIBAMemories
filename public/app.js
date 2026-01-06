@@ -399,22 +399,26 @@ document.addEventListener('DOMContentLoaded', function() {
         moodInput.value = selectedMood;
         console.log('選択された感情:', selectedMood);
         
-        // 背景エフェクトを発生させる
-        // ポジティブな感情
+        // ディスプレイ用背景エフェクトへ通知（Socket.IO経由）
         const positiveMoods = ['exhilarated', 'excited', 'inspired', 'joyful', 'calm', 'relaxed', 'content', 'hopeful', 'happy', 'peaceful', 'energetic', 'surprised'];
-        // ネガティブな感情
         const negativeMoods = ['melancholy', 'lonely', 'tired', 'apathetic', 'anxious', 'tense', 'irritated'];
-        
+        let emotionType = null;
         if (positiveMoods.includes(selectedMood)) {
-            // ポジティブな感情が選択された場合、ピンクの水滴を発生
-            if (typeof window.triggerPositiveEmotion === 'function') {
-                window.triggerPositiveEmotion();
-            }
+            emotionType = 'positive';
         } else if (negativeMoods.includes(selectedMood)) {
-            // ネガティブな感情が選択された場合、ライトブルーの水滴を発生
-            if (typeof window.triggerNegativeEmotion === 'function') {
-                window.triggerNegativeEmotion();
-            }
+            emotionType = 'negative';
+        }
+
+        if (emotionType && socket) {
+            const locationId = 'takeshiba-station';
+            // 念のため場所ルームに参加
+            socket.emit('join-location', locationId);
+            // ディスプレイ側へ感情イベントを送信
+            socket.emit('mood-selected', {
+                locationId,
+                type: emotionType,
+                mood: selectedMood
+            });
         }
         
         // モバイルでの視覚的フィードバック
