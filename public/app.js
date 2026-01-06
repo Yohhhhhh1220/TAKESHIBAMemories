@@ -56,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="haiku-text">${finalLines.join('\n')}</div>
                 <div class="haiku-meta">
                     <div class="haiku-penname">✍️ ${penname}</div>
-                    <div class="haiku-timestamp">${new Date(data.timestamp || data.created_at || new Date()).toLocaleString('ja-JP')}</div>
                 </div>
                 ${haikuId ? `
                 <div class="haiku-actions">
@@ -657,7 +656,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="haiku-text">${finalLines.join('\n')}</div>
             <div class="haiku-meta">
                 <div class="haiku-penname">✍️ ${haikuPenname}</div>
-                <div class="haiku-timestamp">${new Date(haikuTimestamp).toLocaleString('ja-JP')}</div>
             </div>
             <div class="haiku-actions">
                 <button class="like-btn ${isLiked ? 'liked' : ''}" data-haiku-id="${haikuId || ''}">

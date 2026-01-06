@@ -951,15 +951,6 @@
                     card.dataset.haikuId = haikuId.toString();
                 }
                 
-                const date = new Date(haiku.created_at || haiku.timestamp);
-                const formattedDate = date.toLocaleString('ja-JP', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                
                 // 川柳を5-7-5の3行に整形（配列で返される）
                 const lines = formatHaikuToThreeLines(haiku.haiku);
                 
@@ -980,7 +971,6 @@
                     </div>
                     <div class="haiku-display-meta">
                         <div class="haiku-penname">✍️ ${penname}</div>
-                        <div class="haiku-timestamp">${formattedDate}</div>
                     </div>
                     ${haikuId ? `
                     <div class="haiku-display-actions">
