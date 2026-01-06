@@ -686,8 +686,6 @@
 
     <script>
         const haikusContainer = document.getElementById('haikus-container');
-        // 既にエフェクトを発生させた川柳IDを記録
-        const displayedHaikuIds = new Set();
 
         // 川柳を読み込む
         async function loadHaikus() {
@@ -856,42 +854,38 @@
             }
         }
 
-        // 川柳の感情に応じて背景エフェクトを発火
-        async function triggerEmotionEffectForHaiku(haikuId) {
-            if (!haikuId || displayedHaikuIds.has(haikuId)) return;
-            displayedHaikuIds.add(haikuId);
+        // mood情報から直接背景エフェクトを発火
+        function triggerEmotionEffectFromMood(mood) {
+            if (!mood) return;
+            
+            const moodLower = (mood || '').toLowerCase();
+            
+            // プラス感情とマイナス感情の分類
+            const positiveMoods = [
+                'exhilarated', 'excited', 'inspired', 'joyful',
+                'calm', 'relaxed', 'content', 'hopeful',
+                'happy', 'peaceful', 'energetic', 'nostalgic', 'contemplative', 'surprised'
+            ];
+            const negativeMoods = [
+                'melancholy', 'lonely', 'tired', 'apathetic',
+                'anxious', 'tense', 'irritated'
+            ];
 
-            try {
-                const res = await fetch(`/api/haiku/${haikuId}`);
-                if (!res.ok) return;
-                const data = await res.json();
-                const mood = (data.mood || '').toLowerCase();
-
-                // プラス感情とマイナス感情のざっくり分類
-                const positiveMoods = [
-                    'exhilarated','excited','inspired','joyful',
-                    'calm','relaxed','content','hopeful',
-                    'happy','peaceful','energetic','nostalgic','contemplative'
-                ];
-                const negativeMoods = [
-                    'melancholy','lonely','tired','apathetic',
-                    'anxious','tense','irritated'
-                ];
-
-                if (positiveMoods.includes(mood)) {
-                    if (window.triggerPositiveEmotion) window.triggerPositiveEmotion();
-                } else if (negativeMoods.includes(mood)) {
-                    if (window.triggerNegativeEmotion) window.triggerNegativeEmotion();
+            if (positiveMoods.includes(moodLower)) {
+                if (window.triggerPositiveEmotion) {
+                    window.triggerPositiveEmotion();
+                    console.log('ポジティブ感情エフェクト発火:', mood);
                 }
-            } catch (e) {
-                console.warn('感情エフェクト取得エラー:', e);
+            } else if (negativeMoods.includes(moodLower)) {
+                if (window.triggerNegativeEmotion) {
+                    window.triggerNegativeEmotion();
+                    console.log('ネガティブ感情エフェクト発火:', mood);
+                }
             }
         }
 
         // 川柳を表示
         function displayHaikus(haikus) {
-            haikusContainer.innerHTML = '';
-            
             if (!haikus || haikus.length === 0) {
                 haikusContainer.innerHTML = '<div class="loading-message">まだ川柳がありません</div>';
                 return;
@@ -900,10 +894,34 @@
             // 新しい順にソート（既にサーバー側でソート済みだが、念のため）
             haikus.sort((a, b) => new Date(b.created_at || b.timestamp) - new Date(a.created_at || a.timestamp));
             
+            // 既存の川柳IDを取得（重複チェック用）
+            const existingIds = new Set();
+            const existingCards = haikusContainer.querySelectorAll('.haiku-display-card');
+            existingCards.forEach(card => {
+                const id = card.dataset.haikuId;
+                if (id) existingIds.add(id);
+            });
+            
             // 最新20件の川柳を表示（サーバー側で既に制限済み）
             haikus.forEach(haiku => {
+                const haikuId = haiku.id;
+                const isNewHaiku = haikuId && !existingIds.has(haikuId.toString());
+                
+                // 新しい川柳の場合、moodに基づいてEffectを発火
+                if (isNewHaiku && haiku.mood) {
+                    triggerEmotionEffectFromMood(haiku.mood);
+                }
+                
+                // 既に表示されている川柳の場合はスキップ（重複表示を防ぐ）
+                if (haikuId && existingIds.has(haikuId.toString())) {
+                    return;
+                }
+                
                 const card = document.createElement('div');
                 card.className = 'haiku-display-card';
+                if (haikuId) {
+                    card.dataset.haikuId = haikuId.toString();
+                }
                 
                 const date = new Date(haiku.created_at || haiku.timestamp);
                 const formattedDate = date.toLocaleString('ja-JP', {
@@ -925,7 +943,6 @@
                 
                 // 縦書き表示用に各行を縦に配置（右から左に表示されるように順序を保持）
                 const penname = haiku.penname || '詠み人知らず';
-                const haikuId = haiku.id;
                 const likesCount = haiku.likes_count || 0;
                 const isLiked = haiku.liked || false;
                 
@@ -996,11 +1013,6 @@
                 }
                 
                 haikusContainer.appendChild(card);
-
-                // 新しく表示された川柳について、感情に応じてエフェクトを発火
-                if (haikuId) {
-                    triggerEmotionEffectForHaiku(haikuId);
-                }
             });
         }
 

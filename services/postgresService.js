@@ -285,14 +285,22 @@ async function updateSurveyWithHaiku(surveyId, haiku, musicUrl) {
       await initializeDatabase();
     }
     
-    // 川柳テーブルに保存
-    await query(
-      `INSERT INTO haikus (survey_id, haiku_text)
-       VALUES ($1, $2)`,
-      [surveyId, haiku]
+    // surveysテーブルからmood情報を取得
+    const surveyResult = await query(
+      `SELECT mood FROM surveys WHERE id = $1`,
+      [surveyId]
     );
     
-    console.log(`✅ 川柳をデータベースに保存しました: ${haiku}`);
+    const mood = surveyResult.rows && surveyResult.rows.length > 0 ? surveyResult.rows[0].mood : null;
+    
+    // 川柳テーブルに保存（mood_categoryも含める）
+    await query(
+      `INSERT INTO haikus (survey_id, haiku_text, mood_category)
+       VALUES ($1, $2, $3)`,
+      [surveyId, haiku, mood]
+    );
+    
+    console.log(`✅ 川柳をデータベースに保存しました: ${haiku}, mood_category: ${mood}`);
   } catch (error) {
     console.error('川柳保存エラー:', error);
     console.error('エラーの詳細:', error.message);
@@ -348,7 +356,7 @@ async function getAllHaikus() {
     
     console.log('最新20件の川柳を取得中...');
     const result = await query(
-      `SELECT DISTINCT h.haiku_text as haiku, s.location_id, s.penname, h.created_at, h.id
+      `SELECT DISTINCT h.haiku_text as haiku, s.location_id, s.penname, s.mood, h.created_at, h.id
        FROM haikus h
        JOIN surveys s ON h.survey_id = s.id
        ORDER BY h.created_at DESC
