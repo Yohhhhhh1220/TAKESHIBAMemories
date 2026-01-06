@@ -198,7 +198,41 @@ async function initializeDatabase() {
         )
       `);
       
-      // デバイスID用のユニーク制約を追加（既存のテーブルにカラムが存在する場合）
+      // 古いUNIQUE制約を削除（存在する場合）
+      // PostgreSQLでは制約名が自動生成される可能性があるため、複数のパターンを試す
+      const constraintNames = [
+        'haiku_likes_haiku_id_user_ip_key',
+        'haiku_likes_pkey', // これは主キーなので削除しない
+      ];
+      
+      // 実際の制約名を取得
+      try {
+        const constraints = await query(`
+          SELECT constraint_name 
+          FROM information_schema.table_constraints 
+          WHERE table_name = 'haiku_likes' 
+          AND constraint_type = 'UNIQUE'
+          AND constraint_name != 'haiku_likes_pkey'
+        `);
+        
+        for (const row of constraints.rows) {
+          try {
+            await query(`
+              ALTER TABLE haiku_likes 
+              DROP CONSTRAINT IF EXISTS ${row.constraint_name}
+            `);
+            console.log(`✅ 古いUNIQUE制約を削除しました: ${row.constraint_name}`);
+          } catch (dropError) {
+            if (!dropError.message.includes('does not exist')) {
+              console.warn(`⚠️  制約削除時の警告 (${row.constraint_name}):`, dropError.message);
+            }
+          }
+        }
+      } catch (checkError) {
+        console.warn('⚠️  制約確認時の警告:', checkError.message);
+      }
+      
+      // デバイスID用のカラムを追加（既存のテーブルにカラムが存在する場合）
       try {
         await query(`
           ALTER TABLE haiku_likes 
@@ -225,7 +259,7 @@ async function initializeDatabase() {
         }
       }
       
-      // IPベースのユニーク制約も保持（後方互換性のため）
+      // IPベースのユニーク制約も保持（後方互換性のため、device_idがNULLの場合のみ）
       try {
         await query(`
           CREATE UNIQUE INDEX IF NOT EXISTS haiku_likes_haiku_ip_unique 
@@ -586,6 +620,10 @@ async function getStatistics() {
 async function toggleLike(haikuId, userIp, deviceId = null) {
   try {
     // デバイスIDが提供されている場合はそれを使用、そうでなければIPを使用
+    if (!deviceId) {
+      console.warn('⚠️  デバイスIDが提供されていません。IPアドレスを使用します:', userIp);
+    }
+    
     const identifier = deviceId || userIp;
     const identifierType = deviceId ? 'device_id' : 'user_ip';
     
@@ -615,11 +653,29 @@ async function toggleLike(haikuId, userIp, deviceId = null) {
     } else {
       // いいねを追加
       if (deviceId) {
-        await query(
-          `INSERT INTO haiku_likes (haiku_id, device_id, user_ip) VALUES ($1, $2, $3)`,
-          [haikuId, deviceId, userIp]
-        );
+        // デバイスIDがある場合は、device_idとuser_ipの両方を保存
+        try {
+          await query(
+            `INSERT INTO haiku_likes (haiku_id, device_id, user_ip) VALUES ($1, $2, $3)`,
+            [haikuId, deviceId, userIp]
+          );
+        } catch (insertError) {
+          // ユニーク制約エラーの場合、詳細をログに出力
+          if (insertError.message && insertError.message.includes('unique') || insertError.message.includes('duplicate')) {
+            console.error('❌ ユニーク制約エラー:', insertError.message);
+            console.error('haikuId:', haikuId, 'deviceId:', deviceId, 'userIp:', userIp);
+            // 既存のレコードを確認
+            const checkExisting = await query(
+              `SELECT * FROM haiku_likes WHERE haiku_id = $1 AND device_id = $2`,
+              [haikuId, deviceId]
+            );
+            console.error('既存のレコード:', checkExisting.rows);
+            throw new Error(`このデバイスは既にいいねしています: ${insertError.message}`);
+          }
+          throw insertError;
+        }
       } else {
+        // デバイスIDがない場合は、user_ipのみを使用（後方互換性）
         await query(
           `INSERT INTO haiku_likes (haiku_id, user_ip) VALUES ($1, $2)`,
           [haikuId, userIp]
@@ -639,6 +695,8 @@ async function toggleLike(haikuId, userIp, deviceId = null) {
     }
   } catch (error) {
     console.error('いいね処理エラー:', error);
+    console.error('エラーの詳細:', error.message);
+    console.error('エラーのスタック:', error.stack);
     throw error;
   }
 }

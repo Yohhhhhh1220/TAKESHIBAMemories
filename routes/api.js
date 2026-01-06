@@ -278,9 +278,14 @@ router.post('/haiku/:id/like', async (req, res) => {
     });
   } catch (error) {
     console.error('いいね処理エラー:', error);
+    console.error('エラーの詳細:', error.message);
+    console.error('エラーのスタック:', error.stack);
+    console.error('デバイスID:', req.body.deviceId);
+    console.error('ユーザーIP:', req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for']?.split(',')[0] || 'unknown');
     res.status(500).json({
       success: false,
-      error: 'いいね処理中にエラーが発生しました'
+      error: 'いいね処理中にエラーが発生しました',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
