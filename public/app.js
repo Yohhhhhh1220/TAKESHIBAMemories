@@ -395,8 +395,27 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('選択状態を追加:', option.classList.contains('selected'));
         
         // 隠しフィールドに値を設定
-        moodInput.value = option.dataset.mood;
-        console.log('選択された感情:', moodInput.value);
+        const selectedMood = option.dataset.mood;
+        moodInput.value = selectedMood;
+        console.log('選択された感情:', selectedMood);
+        
+        // 背景エフェクトを発生させる
+        // ポジティブな感情
+        const positiveMoods = ['exhilarated', 'excited', 'inspired', 'joyful', 'calm', 'relaxed', 'content', 'hopeful', 'happy', 'peaceful', 'energetic', 'surprised'];
+        // ネガティブな感情
+        const negativeMoods = ['melancholy', 'lonely', 'tired', 'apathetic', 'anxious', 'tense', 'irritated'];
+        
+        if (positiveMoods.includes(selectedMood)) {
+            // ポジティブな感情が選択された場合、ピンクの水滴を発生
+            if (typeof window.triggerPositiveEmotion === 'function') {
+                window.triggerPositiveEmotion();
+            }
+        } else if (negativeMoods.includes(selectedMood)) {
+            // ネガティブな感情が選択された場合、ライトブルーの水滴を発生
+            if (typeof window.triggerNegativeEmotion === 'function') {
+                window.triggerNegativeEmotion();
+            }
+        }
         
         // モバイルでの視覚的フィードバック
         if (window.innerWidth <= 768) {
