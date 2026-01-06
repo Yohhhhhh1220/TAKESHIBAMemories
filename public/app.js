@@ -520,13 +520,30 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
     /**
+     * デバイスIDを取得または生成
+     */
+    function getDeviceId() {
+        let deviceId = localStorage.getItem('deviceId');
+        if (!deviceId) {
+            // 一意のデバイスIDを生成（UUID風の文字列）
+            deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('deviceId', deviceId);
+        }
+        return deviceId;
+    }
+
+    /**
      * 川柳ギャラリーを読み込み
      */
     async function loadHaikuGallery() {
         try {
             loadingIndicator.style.display = 'block';
             
-            const response = await fetch('/api/haikus');
+            // デバイスIDを取得
+            const deviceId = getDeviceId();
+            
+            // デバイスIDをクエリパラメータとして送信
+            const response = await fetch(`/api/haikus?deviceId=${encodeURIComponent(deviceId)}`);
             
             // レスポンスのステータスを確認
             if (!response.ok) {
@@ -672,11 +689,15 @@ document.addEventListener('DOMContentLoaded', function() {
             // ボタンを無効化
             likeBtn.disabled = true;
             
+            // デバイスIDを取得
+            const deviceId = getDeviceId();
+            
             const response = await fetch(`/api/haiku/${haikuId}/like`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                body: JSON.stringify({ deviceId: deviceId })
             });
             
             const result = await response.json();

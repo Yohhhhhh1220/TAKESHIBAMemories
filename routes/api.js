@@ -207,7 +207,10 @@ router.get('/haikus', async (req, res) => {
     // getAllHaikusは常に配列を返す（エラー時は空配列）
     const haikus = await getAllHaikus();
     
-    // ユーザーIPを取得
+    // デバイスIDを取得（優先的に使用）
+    const deviceId = req.query.deviceId || null;
+    
+    // ユーザーIPを取得（後方互換性のため）
     const userIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
     
     // いいね情報を取得
@@ -216,7 +219,7 @@ router.get('/haikus', async (req, res) => {
       const haikuIds = haikus.map(h => h.id).filter(id => id != null);
       if (haikuIds.length > 0) {
         try {
-          likeData = await getLikeCounts(haikuIds, userIp);
+          likeData = await getLikeCounts(haikuIds, userIp, deviceId);
         } catch (likeError) {
           console.warn('いいね情報取得エラー（続行します）:', likeError.message);
         }
@@ -260,10 +263,13 @@ router.post('/haiku/:id/like', async (req, res) => {
     const { id } = req.params;
     const { toggleLike } = require('../services/postgresService');
     
-    // ユーザーIPを取得
+    // デバイスIDを取得（優先的に使用）
+    const deviceId = req.body.deviceId || null;
+    
+    // ユーザーIPを取得（後方互換性のため）
     const userIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
     
-    const result = await toggleLike(parseInt(id), userIp);
+    const result = await toggleLike(parseInt(id), userIp, deviceId);
     
     res.json({
       success: true,

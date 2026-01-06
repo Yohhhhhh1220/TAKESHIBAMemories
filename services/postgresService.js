@@ -192,11 +192,52 @@ async function initializeDatabase() {
           id SERIAL PRIMARY KEY,
           haiku_id INTEGER NOT NULL,
           user_ip VARCHAR(45),
+          device_id VARCHAR(255),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (haiku_id) REFERENCES haikus (id) ON DELETE CASCADE,
-          UNIQUE(haiku_id, user_ip)
+          FOREIGN KEY (haiku_id) REFERENCES haikus (id) ON DELETE CASCADE
         )
       `);
+      
+      // デバイスID用のユニーク制約を追加（既存のテーブルにカラムが存在する場合）
+      try {
+        await query(`
+          ALTER TABLE haiku_likes 
+          ADD COLUMN IF NOT EXISTS device_id VARCHAR(255)
+        `);
+      } catch (alterError) {
+        // カラムが既に存在する場合は無視
+        if (!alterError.message.includes('already exists') && !alterError.message.includes('duplicate column')) {
+          console.warn('⚠️  device_idカラム追加時の警告:', alterError.message);
+        }
+      }
+      
+      // デバイスIDベースのユニーク制約を追加（既に存在する場合は無視）
+      try {
+        await query(`
+          CREATE UNIQUE INDEX IF NOT EXISTS haiku_likes_haiku_device_unique 
+          ON haiku_likes(haiku_id, device_id) 
+          WHERE device_id IS NOT NULL
+        `);
+      } catch (indexError) {
+        // インデックスが既に存在する場合は無視
+        if (!indexError.message.includes('already exists') && !indexError.message.includes('duplicate')) {
+          console.warn('⚠️  インデックス作成時の警告:', indexError.message);
+        }
+      }
+      
+      // IPベースのユニーク制約も保持（後方互換性のため）
+      try {
+        await query(`
+          CREATE UNIQUE INDEX IF NOT EXISTS haiku_likes_haiku_ip_unique 
+          ON haiku_likes(haiku_id, user_ip) 
+          WHERE device_id IS NULL AND user_ip IS NOT NULL
+        `);
+      } catch (indexError) {
+        // インデックスが既に存在する場合は無視
+        if (!indexError.message.includes('already exists') && !indexError.message.includes('duplicate')) {
+          console.warn('⚠️  IPインデックス作成時の警告:', indexError.message);
+        }
+      }
       
       isInitialized = true;
       console.log('✅ PostgreSQLデータベーステーブルを初期化しました');
@@ -538,22 +579,27 @@ async function getStatistics() {
 /**
  * 川柳にいいねを追加/削除
  * @param {number} haikuId - 川柳ID
- * @param {string} userIp - ユーザーIPアドレス
+ * @param {string} userIp - ユーザーIPアドレス（後方互換性のため）
+ * @param {string} deviceId - デバイスID（優先的に使用）
  * @returns {Promise<Object>} いいね状態とカウント
  */
-async function toggleLike(haikuId, userIp) {
+async function toggleLike(haikuId, userIp, deviceId = null) {
   try {
+    // デバイスIDが提供されている場合はそれを使用、そうでなければIPを使用
+    const identifier = deviceId || userIp;
+    const identifierType = deviceId ? 'device_id' : 'user_ip';
+    
     // 既存のいいねをチェック
     const existing = await query(
-      `SELECT * FROM haiku_likes WHERE haiku_id = $1 AND user_ip = $2`,
-      [haikuId, userIp]
+      `SELECT * FROM haiku_likes WHERE haiku_id = $1 AND ${identifierType} = $2`,
+      [haikuId, identifier]
     );
     
     if (existing.rows.length > 0) {
       // いいねを削除
       await query(
-        `DELETE FROM haiku_likes WHERE haiku_id = $1 AND user_ip = $2`,
-        [haikuId, userIp]
+        `DELETE FROM haiku_likes WHERE haiku_id = $1 AND ${identifierType} = $2`,
+        [haikuId, identifier]
       );
       
       // いいね数を取得
@@ -568,10 +614,17 @@ async function toggleLike(haikuId, userIp) {
       };
     } else {
       // いいねを追加
-      await query(
-        `INSERT INTO haiku_likes (haiku_id, user_ip) VALUES ($1, $2)`,
-        [haikuId, userIp]
-      );
+      if (deviceId) {
+        await query(
+          `INSERT INTO haiku_likes (haiku_id, device_id, user_ip) VALUES ($1, $2, $3)`,
+          [haikuId, deviceId, userIp]
+        );
+      } else {
+        await query(
+          `INSERT INTO haiku_likes (haiku_id, user_ip) VALUES ($1, $2)`,
+          [haikuId, userIp]
+        );
+      }
       
       // いいね数を取得
       const countResult = await query(
@@ -593,10 +646,11 @@ async function toggleLike(haikuId, userIp) {
 /**
  * 川柳のいいね数を取得
  * @param {number} haikuId - 川柳ID
- * @param {string} userIp - ユーザーIPアドレス（オプション）
+ * @param {string} userIp - ユーザーIPアドレス（オプション、後方互換性のため）
+ * @param {string} deviceId - デバイスID（オプション、優先的に使用）
  * @returns {Promise<Object>} いいね数とユーザーのいいね状態
  */
-async function getLikeCount(haikuId, userIp = null) {
+async function getLikeCount(haikuId, userIp = null, deviceId = null) {
   try {
     const countResult = await query(
       `SELECT COUNT(*) as count FROM haiku_likes WHERE haiku_id = $1`,
@@ -604,7 +658,13 @@ async function getLikeCount(haikuId, userIp = null) {
     );
     
     let liked = false;
-    if (userIp) {
+    if (deviceId) {
+      const userLike = await query(
+        `SELECT * FROM haiku_likes WHERE haiku_id = $1 AND device_id = $2`,
+        [haikuId, deviceId]
+      );
+      liked = userLike.rows.length > 0;
+    } else if (userIp) {
       const userLike = await query(
         `SELECT * FROM haiku_likes WHERE haiku_id = $1 AND user_ip = $2`,
         [haikuId, userIp]
@@ -625,10 +685,11 @@ async function getLikeCount(haikuId, userIp = null) {
 /**
  * 複数の川柳のいいね数を一括取得
  * @param {Array<number>} haikuIds - 川柳IDの配列
- * @param {string} userIp - ユーザーIPアドレス（オプション）
+ * @param {string} userIp - ユーザーIPアドレス（オプション、後方互換性のため）
+ * @param {string} deviceId - デバイスID（オプション、優先的に使用）
  * @returns {Promise<Object>} 川柳IDをキーとしたいいね数と状態のマップ
  */
-async function getLikeCounts(haikuIds, userIp = null) {
+async function getLikeCounts(haikuIds, userIp = null, deviceId = null) {
   try {
     if (!haikuIds || haikuIds.length === 0) {
       return {};
@@ -650,7 +711,16 @@ async function getLikeCounts(haikuIds, userIp = null) {
     
     // ユーザーのいいね状態を取得
     const userLikes = {};
-    if (userIp) {
+    if (deviceId) {
+      const userLikeResult = await query(
+        `SELECT haiku_id FROM haiku_likes 
+         WHERE haiku_id = ANY($1::int[]) AND device_id = $2`,
+        [haikuIds, deviceId]
+      );
+      userLikeResult.rows.forEach(row => {
+        userLikes[row.haiku_id] = true;
+      });
+    } else if (userIp) {
       const userLikeResult = await query(
         `SELECT haiku_id FROM haiku_likes 
          WHERE haiku_id = ANY($1::int[]) AND user_ip = $2`,
