@@ -300,12 +300,45 @@ document.addEventListener('DOMContentLoaded', function() {
         const moodInput = document.getElementById('mood');
         
         moodOptions.forEach(option => {
-            // クリックイベント（タップ/クリック共通）
+            let isTouching = false;
+            
+            // クリックイベント（デスクトップ用）
             option.addEventListener('click', function(e) {
+                if (!isTouching) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('クリックイベント:', this.dataset.mood);
+                    selectMood(this, moodOptions, moodInput);
+                }
+            });
+            
+            // タッチイベント（モバイル用）
+            option.addEventListener('touchstart', function(e) {
+                isTouching = true;
+                e.preventDefault();
+                this.style.transform = 'scale(0.95)';
+                this.style.backgroundColor = '#f8f9ff';
+                console.log('タッチ開始:', this.dataset.mood);
+            }, { passive: false });
+            
+            option.addEventListener('touchend', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('クリック/タップイベント:', this.dataset.mood);
-                selectMood(this, moodOptions, moodInput);
+                console.log('タッチ終了:', this.dataset.mood);
+                // 少し遅延させてタッチイベントを確実に処理
+                setTimeout(() => {
+                    selectMood(this, moodOptions, moodInput);
+                }, 10);
+                isTouching = false;
+                this.style.transform = '';
+                this.style.backgroundColor = '';
+            }, { passive: false });
+            
+            option.addEventListener('touchcancel', function(e) {
+                isTouching = false;
+                this.style.transform = '';
+                this.style.backgroundColor = '';
+                console.log('タッチキャンセル');
             });
             
             // マウスイベント（デスクトップ用の視覚的フィードバック）
@@ -435,15 +468,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 // 川柳を表示（3行に整形）
                 const lines = formatHaikuToThreeLines(result.haiku);
-                const validLines = lines.filter(line => line && line.trim() !== '');
-                const finalLines = validLines.length >= 3 ? validLines.slice(0, 3) : 
-                                  validLines.length === 2 ? [...validLines, ''] :
-                                  validLines.length === 1 ? [validLines[0], '', ''] : ['', '', ''];
-                
-                // 縦書き表示用に各行をspanで囲む
-                haikuDisplay.innerHTML = finalLines.map((line, index) => 
-                    `<span class="haiku-line" data-line="${index + 1}">${line || ''}</span>`
-                ).join('');
+                const formattedHaiku = lines.join('\n');
+                haikuDisplay.textContent = formattedHaiku;
                 haikuDisplay.classList.add('haiku-reveal');
                 resultSection.style.display = 'block';
                 
