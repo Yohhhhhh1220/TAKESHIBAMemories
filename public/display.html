@@ -897,10 +897,19 @@
             // 既存の川柳IDを取得（重複チェック用）
             const existingIds = new Set();
             const existingCards = haikusContainer.querySelectorAll('.haiku-display-card');
+            const hasLoadingMessage = haikusContainer.querySelector('.loading-message') !== null;
+            const hasErrorMessage = haikusContainer.querySelector('.error-message') !== null;
+            const isInitialLoad = existingCards.length === 0 || hasLoadingMessage || hasErrorMessage;
+            
             existingCards.forEach(card => {
                 const id = card.dataset.haikuId;
                 if (id) existingIds.add(id);
             });
+            
+            // 初回読み込み時はコンテナをクリア
+            if (isInitialLoad) {
+                haikusContainer.innerHTML = '';
+            }
             
             // 最新20件の川柳を表示（サーバー側で既に制限済み）
             haikus.forEach(haiku => {
