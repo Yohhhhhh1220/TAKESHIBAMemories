@@ -913,19 +913,24 @@
             }
             
             // 最新20件の川柳を表示（サーバー側で既に制限済み）
+            // 新しい川柳を先頭に追加するため、新しい川柳と既存の川柳を分けて処理
+            const newHaikuCards = [];
+            const existingFirstChild = haikusContainer.firstChild;
+            
             haikus.forEach(haiku => {
                 const haikuId = haiku.id;
                 const isNewHaiku = haikuId && !existingIds.has(haikuId.toString());
+                
+                // 既に表示されている川柳の場合はスキップ（重複表示を防ぐ）
+                if (haikuId && existingIds.has(haikuId.toString())) {
+                    return;
+                }
                 
                 // 新しい川柳の場合、moodに基づいてEffectを発火
                 if (isNewHaiku && haiku.mood) {
                     triggerEmotionEffectFromMood(haiku.mood);
                 }
                 
-                // 既に表示されている川柳の場合はスキップ（重複表示を防ぐ）
-                if (haikuId && existingIds.has(haikuId.toString())) {
-                    return;
-                }
                 const card = document.createElement('div');
                 card.className = 'haiku-display-card';
                 if (haikuId) {
@@ -1021,8 +1026,27 @@
                     }
                 }
                 
-                haikusContainer.appendChild(card);
+                // 初回読み込み時は末尾に追加、それ以外は新しい川柳を配列に追加
+                if (isInitialLoad) {
+                    haikusContainer.appendChild(card);
+                } else if (isNewHaiku) {
+                    newHaikuCards.push(card);
+                }
             });
+            
+            // 新しい川柳を先頭に追加（既存の最初の要素の前に挿入）
+            if (!isInitialLoad && newHaikuCards.length > 0) {
+                // 新しい川柳を新しい順（配列の順序通り）に先頭に追加
+                // 配列を逆順にして、最初の要素（最新）から順に先頭に追加
+                for (let i = newHaikuCards.length - 1; i >= 0; i--) {
+                    const card = newHaikuCards[i];
+                    if (existingFirstChild) {
+                        haikusContainer.insertBefore(card, existingFirstChild);
+                    } else {
+                        haikusContainer.insertBefore(card, haikusContainer.firstChild);
+                    }
+                }
+            }
         }
 
         // 初期読み込み
