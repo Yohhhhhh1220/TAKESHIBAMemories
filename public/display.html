@@ -238,23 +238,18 @@
             }
 
             .haiku-display-text {
-                font-size: 2rem;
-                line-height: 2.5;
-                font-weight: bold;
+                font-size: 1.2rem;
+                line-height: 1.8;
                 min-height: auto;
                 display: flex;
                 flex-direction: row-reverse;
                 justify-content: center;
                 align-items: center;
-                gap: 1.2em;
+                gap: 1em;
                 width: 100%;
                 padding: 20px;
                 box-sizing: border-box;
                 text-align: center;
-                letter-spacing: 0.1em;
-                color: #2c3e50;
-                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                font-family: 'Shippori Mincho', serif;
             }
 
             .haiku-line {
@@ -614,7 +609,7 @@
             const dropletsLocation = gl.getUniformLocation(program, 'droplets');
             const dropletCountLocation = gl.getUniformLocation(program, 'dropletCount');
 
-            function addDroplet(type) {
+            function addDroplet(type, delay = 0) {
                 const currentTime = performance.now() / 1000;
                 const x = (Math.random() - 0.5) * 1.2;
                 const y = (Math.random() - 0.5) * 1.2;
@@ -623,16 +618,35 @@
                     droplets.shift();
                 }
 
-                droplets.push({ x, y, time: currentTime, type });
+                droplets.push({ x, y, time: currentTime - delay, type });
+            }
+
+            // 6つの波紋を少しずつタイミングをずらして追加
+            function addRippleGroup(type) {
+                const delays = [0, 0.08, 0.16, 0.24, 0.32, 0.40]; // 6つの波紋のタイミングを少しずつずらす
+                delays.forEach(delay => {
+                    addDroplet(type, delay);
+                });
             }
 
             // 外部から呼び出すためのグローバル関数
             window.triggerPositiveEmotion = function () {
-                addDroplet(1); // ピンク
+                addRippleGroup(1); // ピンク
             };
             window.triggerNegativeEmotion = function () {
-                addDroplet(2); // ライトブルー
+                addRippleGroup(2); // ライトブルー
             };
+
+            // 1分ごとにランダムな色で波紋を発生させる
+            function startRandomRippleTimer() {
+                setInterval(() => {
+                    // ランダムにピンクまたはライトブルーを選択
+                    const randomType = Math.random() < 0.5 ? 1 : 2;
+                    addRippleGroup(randomType);
+                    console.log('ランダム波紋発生:', randomType === 1 ? 'ピンク' : 'ライトブルー');
+                }, 60000); // 60秒 = 1分
+            }
+            startRandomRippleTimer();
 
             // テスト用：A / S キーで水滴を発生させる
             document.addEventListener('keydown', (e) => {
@@ -669,37 +683,14 @@
         })();
     </script>
 
-    <!-- ホーム画面からの感情イベントを受け取って背景エフェクトを発火 -->
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        (function () {
-            if (typeof io === 'undefined') return;
-            const socket = io();
-            const locationId = 'takeshiba-station';
-            socket.emit('join-location', locationId);
-
-            socket.on('mood-selected', (data) => {
-                if (!data || !data.type) return;
-                if (data.type === 'positive') {
-                    if (window.triggerPositiveEmotion) window.triggerPositiveEmotion();
-                } else if (data.type === 'negative') {
-                    if (window.triggerNegativeEmotion) window.triggerNegativeEmotion();
-                }
-            });
-        })();
-    </script>
-
     <script>
         const haikusContainer = document.getElementById('haikus-container');
+        
 
         // 川柳を読み込む
         async function loadHaikus() {
             try {
-                // デバイスIDを取得
-                const deviceId = getDeviceId();
-                
-                // デバイスIDをクエリパラメータとして送信
-                const response = await fetch(`/api/haikus?deviceId=${encodeURIComponent(deviceId)}`);
+                const response = await fetch('/api/haikus');
                 const data = await response.json();
                 
                 if (data.haikus && data.haikus.length > 0) {
@@ -823,32 +814,17 @@
             return [line1, line2, line3];
         }
 
-        // デバイスIDを取得または生成
-        function getDeviceId() {
-            let deviceId = localStorage.getItem('deviceId');
-            if (!deviceId) {
-                // 一意のデバイスIDを生成（UUID風の文字列）
-                deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('deviceId', deviceId);
-            }
-            return deviceId;
-        }
-
         // いいねボタンのクリック処理
         async function handleLikeClick(haikuId, likeBtn) {
             try {
                 // ボタンを無効化
                 likeBtn.disabled = true;
                 
-                // デバイスIDを取得
-                const deviceId = getDeviceId();
-                
                 const response = await fetch(`/api/haiku/${haikuId}/like`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ deviceId: deviceId })
+                    }
                 });
                 
                 const result = await response.json();
@@ -949,12 +925,20 @@
                 if (haikuId && existingIds.has(haikuId.toString())) {
                     return;
                 }
-                
                 const card = document.createElement('div');
                 card.className = 'haiku-display-card';
                 if (haikuId) {
                     card.dataset.haikuId = haikuId.toString();
                 }
+                
+                const date = new Date(haiku.created_at || haiku.timestamp);
+                const formattedDate = date.toLocaleString('ja-JP', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
                 
                 // 川柳を5-7-5の3行に整形（配列で返される）
                 const lines = formatHaikuToThreeLines(haiku.haiku);
@@ -976,6 +960,7 @@
                     </div>
                     <div class="haiku-display-meta">
                         <div class="haiku-penname">✍️ ${penname}</div>
+                        <div class="haiku-timestamp">${formattedDate}</div>
                     </div>
                     ${haikuId ? `
                     <div class="haiku-display-actions">
