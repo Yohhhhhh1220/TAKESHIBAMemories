@@ -368,17 +368,28 @@
         // 川柳を読み込む
         async function loadHaikus() {
             try {
+                console.log('川柳を読み込み中...');
                 const response = await fetch('/api/haikus');
-                const data = await response.json();
                 
-                if (data.haikus && data.haikus.length > 0) {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('APIレスポンス:', data);
+                
+                if (data.haikus && Array.isArray(data.haikus) && data.haikus.length > 0) {
+                    console.log(`川柳を表示します: ${data.haikus.length}件`);
                     displayHaikus(data.haikus);
                 } else {
+                    console.warn('川柳データが空です:', data);
                     haikusContainer.innerHTML = '<div class="loading-message">まだ川柳がありません</div>';
                 }
             } catch (error) {
                 console.error('川柳読み込みエラー:', error);
-                haikusContainer.innerHTML = '<div class="error-message">川柳の読み込みに失敗しました</div>';
+                console.error('エラーの詳細:', error.message);
+                console.error('エラーのスタック:', error.stack);
+                haikusContainer.innerHTML = '<div class="error-message">川柳の読み込みに失敗しました: ' + error.message + '</div>';
             }
         }
 

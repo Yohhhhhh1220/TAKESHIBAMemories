@@ -444,16 +444,35 @@ async function getAllHaikus() {
     }
     
     console.log('最新20件の川柳を取得中...');
-    const result = await query(
-      `SELECT DISTINCT h.haiku_text as haiku, s.location_id, s.penname, s.mood, h.created_at, h.id, h.display_order
-       FROM haikus h
-       JOIN surveys s ON h.survey_id = s.id
-       ORDER BY 
-         CASE WHEN h.display_order IS NOT NULL THEN 0 ELSE 1 END,
-         h.display_order ASC NULLS LAST,
-         h.created_at DESC
-       LIMIT 20`
-    );
+    // display_orderカラムが存在するか確認してから適切なクエリを実行
+    let result;
+    try {
+      // display_orderカラムが存在する場合のクエリ
+      result = await query(
+        `SELECT DISTINCT h.haiku_text as haiku, s.location_id, s.penname, s.mood, h.created_at, h.id, h.display_order
+         FROM haikus h
+         JOIN surveys s ON h.survey_id = s.id
+         ORDER BY 
+           CASE WHEN h.display_order IS NOT NULL THEN 0 ELSE 1 END,
+           h.display_order ASC NULLS LAST,
+           h.created_at DESC
+         LIMIT 20`
+      );
+    } catch (error) {
+      // display_orderカラムが存在しない場合のフォールバック
+      if (error.message && (error.message.includes('column') && error.message.includes('display_order'))) {
+        console.warn('⚠️  display_orderカラムが存在しないため、created_atでソートします');
+        result = await query(
+          `SELECT DISTINCT h.haiku_text as haiku, s.location_id, s.penname, s.mood, h.created_at, h.id
+           FROM haikus h
+           JOIN surveys s ON h.survey_id = s.id
+           ORDER BY h.created_at DESC
+           LIMIT 20`
+        );
+      } else {
+        throw error;
+      }
+    }
     
     const haikus = result.rows || [];
     console.log(`取得した川柳数: ${haikus.length}件（最新20件まで）`);

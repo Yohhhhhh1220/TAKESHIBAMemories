@@ -205,7 +205,9 @@ router.get('/haikus', async (req, res) => {
     }
     
     // getAllHaikusは常に配列を返す（エラー時は空配列）
+    console.log('川柳一覧を取得中...');
     const haikus = await getAllHaikus();
+    console.log(`取得した川柳数: ${haikus ? haikus.length : 0}件`);
     
     // デバイスIDを取得（優先的に使用）
     const deviceId = req.query.deviceId || null;
@@ -217,9 +219,11 @@ router.get('/haikus', async (req, res) => {
     let likeData = {};
     if (haikus && haikus.length > 0) {
       const haikuIds = haikus.map(h => h.id).filter(id => id != null);
+      console.log(`いいね情報を取得中: ${haikuIds.length}件の川柳`);
       if (haikuIds.length > 0) {
         try {
           likeData = await getLikeCounts(haikuIds, userIp, deviceId);
+          console.log('いいね情報取得完了');
         } catch (likeError) {
           console.warn('いいね情報取得エラー（続行します）:', likeError.message);
         }
@@ -235,6 +239,8 @@ router.get('/haikus', async (req, res) => {
         liked: likeInfo.liked
       };
     });
+    
+    console.log(`川柳一覧APIレスポンス: ${haikusWithLikes.length}件の川柳を返します`);
     
     // 常に正常なレスポンスとして返す（空配列でもOK）
     res.json({ 
