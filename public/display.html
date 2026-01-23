@@ -95,41 +95,6 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        /* 管理者モード時のドラッグ&ドロップスタイル */
-        .admin-mode .haiku-display-card {
-            cursor: move;
-            cursor: grab;
-        }
-
-        .admin-mode .haiku-display-card:active {
-            cursor: grabbing;
-        }
-
-        .admin-mode .haiku-display-card.dragging {
-            opacity: 0.5;
-            transform: scale(0.95);
-            box-shadow: 
-                0 50px 100px rgba(0,0,0,0.2),
-                0 0 0 2px rgba(102, 126, 234, 0.5);
-        }
-
-        .admin-mode .haiku-display-card.drag-over {
-            border: 2px dashed rgba(102, 126, 234, 0.5);
-            transform: translateY(-10px);
-        }
-
-        .admin-badge {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(102, 126, 234, 0.9);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
 
         .haiku-display-card::before {
             content: '';
@@ -346,24 +311,6 @@
 
     <script>
         const haikusContainer = document.getElementById('haikus-container');
-        
-        // 管理者モードの判定（URLクエリパラメータ）
-        const urlParams = new URLSearchParams(window.location.search);
-        const isAdminMode = urlParams.get('admin') === 'true';
-        
-        // 管理者モード時はbodyにクラスを追加
-        if (isAdminMode) {
-            document.body.classList.add('admin-mode');
-            // 管理者バッジを表示
-            const adminBadge = document.createElement('div');
-            adminBadge.className = 'admin-badge';
-            adminBadge.textContent = '管理者モード: ドラッグ&ドロップで並び替え可能';
-            document.body.appendChild(adminBadge);
-        }
-
-        // ドラッグ&ドロップ関連の変数
-        let draggedElement = null;
-        let draggedIndex = -1;
 
         // 川柳を読み込む
         async function loadHaikus() {
@@ -552,19 +499,17 @@
                 return;
             }
             
-            // サーバー側で既にdisplay_orderまたはcreated_atでソート済み
-            // そのまま表示する（管理者が設定した順序を尊重）
+            // 新しい順にソート（既にサーバー側でソート済みだが、念のため）
+            haikus.sort((a, b) => new Date(b.created_at || b.timestamp) - new Date(a.created_at || a.timestamp));
             
             // 最新20件の川柳を表示（サーバー側で既に制限済み）
-            haikus.forEach((haiku, index) => {
+            haikus.forEach(haiku => {
                 const card = document.createElement('div');
                 card.className = 'haiku-display-card';
                 
-                // 管理者モード用のdata属性を設定
                 if (haiku.id) {
                     card.dataset.haikuId = haiku.id.toString();
                 }
-                card.dataset.index = index;
                 
                 const date = new Date(haiku.created_at || haiku.timestamp);
                 const formattedDate = date.toLocaleString('ja-JP', {
@@ -658,110 +603,6 @@
                 
                 haikusContainer.appendChild(card);
             });
-            
-            // 管理者モード時はドラッグ&ドロップを有効化
-            if (isAdminMode) {
-                setupDragAndDrop();
-            }
-        }
-
-        // ドラッグ&ドロップ機能のセットアップ
-        function setupDragAndDrop() {
-            const cards = haikusContainer.querySelectorAll('.haiku-display-card');
-            
-            cards.forEach((card, index) => {
-                card.draggable = true;
-                card.dataset.index = index;
-                
-                // ドラッグ開始
-                card.addEventListener('dragstart', function(e) {
-                    draggedElement = this;
-                    draggedIndex = parseInt(this.dataset.index);
-                    this.classList.add('dragging');
-                    e.dataTransfer.effectAllowed = 'move';
-                    e.dataTransfer.setData('text/html', this.outerHTML);
-                });
-                
-                // ドラッグ終了
-                card.addEventListener('dragend', function(e) {
-                    this.classList.remove('dragging');
-                    cards.forEach(c => c.classList.remove('drag-over'));
-                });
-                
-                // ドラッグオーバー
-                card.addEventListener('dragover', function(e) {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                    
-                    if (draggedElement && draggedElement !== this) {
-                        this.classList.add('drag-over');
-                    }
-                });
-                
-                // ドラッグリーブ
-                card.addEventListener('dragleave', function(e) {
-                    this.classList.remove('drag-over');
-                });
-                
-                // ドロップ
-                card.addEventListener('drop', function(e) {
-                    e.preventDefault();
-                    this.classList.remove('drag-over');
-                    
-                    if (draggedElement && draggedElement !== this) {
-                        const targetIndex = parseInt(this.dataset.index);
-                        const cardsArray = Array.from(cards);
-                        
-                        // DOM要素の順序を変更
-                        if (draggedIndex < targetIndex) {
-                            haikusContainer.insertBefore(draggedElement, this.nextSibling);
-                        } else {
-                            haikusContainer.insertBefore(draggedElement, this);
-                        }
-                        
-                        // インデックスを更新
-                        const newCards = haikusContainer.querySelectorAll('.haiku-display-card');
-                        newCards.forEach((c, i) => {
-                            c.dataset.index = i;
-                        });
-                        
-                        // 順序を保存
-                        saveDisplayOrder();
-                    }
-                });
-            });
-        }
-
-        // 表示順序を保存
-        async function saveDisplayOrder() {
-            try {
-                const cards = haikusContainer.querySelectorAll('.haiku-display-card');
-                const haikuIds = Array.from(cards).map(card => {
-                    return parseInt(card.dataset.haikuId);
-                }).filter(id => !isNaN(id));
-                
-                if (haikuIds.length === 0) {
-                    return;
-                }
-                
-                const response = await fetch('/api/haikus/display-order', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ haikuIds })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    console.log('✅ 表示順序を保存しました');
-                } else {
-                    console.error('❌ 表示順序の保存に失敗:', result.error);
-                }
-            } catch (error) {
-                console.error('❌ 表示順序の保存エラー:', error);
-            }
         }
 
         // 初期読み込み

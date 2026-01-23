@@ -444,50 +444,20 @@ async function getAllHaikus() {
     }
     
     console.log('最新20件の川柳を取得中...');
-    // display_orderカラムが存在するか確認してから適切なクエリを実行
-    let result;
-    try {
-      // display_orderカラムが存在する場合のクエリ（LEFT JOINを使用してsurveysテーブルにデータがなくても取得可能に）
-      result = await query(
-        `SELECT DISTINCT h.haiku_text as haiku, 
-                COALESCE(s.location_id, 'unknown') as location_id, 
-                COALESCE(s.penname, '詠み人知らず') as penname, 
-                s.mood, 
-                h.created_at, 
-                h.id, 
-                h.display_order
-         FROM haikus h
-         LEFT JOIN surveys s ON h.survey_id = s.id
-         WHERE h.haiku_text IS NOT NULL AND h.haiku_text != ''
-         ORDER BY 
-           CASE WHEN h.display_order IS NOT NULL THEN 0 ELSE 1 END,
-           h.display_order ASC NULLS LAST,
-           h.created_at DESC
-         LIMIT 20`
-      );
-    } catch (error) {
-      // display_orderカラムが存在しない場合のフォールバック
-      if (error.message && (error.message.includes('column') && error.message.includes('display_order'))) {
-        console.warn('⚠️  display_orderカラムが存在しないため、created_atでソートします');
-        result = await query(
-          `SELECT DISTINCT h.haiku_text as haiku, 
-                  COALESCE(s.location_id, 'unknown') as location_id, 
-                  COALESCE(s.penname, '詠み人知らず') as penname, 
-                  s.mood, 
-                  h.created_at, 
-                  h.id
-           FROM haikus h
-           LEFT JOIN surveys s ON h.survey_id = s.id
-           WHERE h.haiku_text IS NOT NULL AND h.haiku_text != ''
-           ORDER BY h.created_at DESC
-           LIMIT 20`
-        );
-      } else {
-        console.error('SQLクエリエラー:', error);
-        console.error('エラーメッセージ:', error.message);
-        throw error;
-      }
-    }
+    // シンプルなクエリで川柳を取得（LEFT JOINを使用してsurveysテーブルにデータがなくても取得可能に）
+    const result = await query(
+      `SELECT DISTINCT h.haiku_text as haiku, 
+              COALESCE(s.location_id, 'unknown') as location_id, 
+              COALESCE(s.penname, '詠み人知らず') as penname, 
+              s.mood, 
+              h.created_at, 
+              h.id
+       FROM haikus h
+       LEFT JOIN surveys s ON h.survey_id = s.id
+       WHERE h.haiku_text IS NOT NULL AND h.haiku_text != ''
+       ORDER BY h.created_at DESC
+       LIMIT 20`
+    );
     
     const haikus = result.rows || [];
     console.log(`取得した川柳数: ${haikus.length}件（最新20件まで）`);
@@ -496,16 +466,28 @@ async function getAllHaikus() {
     if (haikus.length === 0) {
       try {
         const countResult = await query('SELECT COUNT(*) as count FROM haikus');
-        const totalCount = countResult.rows[0]?.count || 0;
+        const totalCount = parseInt(countResult.rows[0]?.count || 0);
         console.log(`データベース内の川柳総数: ${totalCount}件`);
         
         if (totalCount > 0) {
           // サンプルデータを取得して確認
           const sampleResult = await query('SELECT id, haiku_text, survey_id, created_at FROM haikus LIMIT 5');
-          console.log('サンプルデータ:', sampleResult.rows);
+          console.log('サンプルデータ:', JSON.stringify(sampleResult.rows, null, 2));
+          
+          // surveysテーブルとの結合を確認
+          const joinResult = await query(`
+            SELECT h.id, h.haiku_text, h.survey_id, s.id as survey_exists
+            FROM haikus h
+            LEFT JOIN surveys s ON h.survey_id = s.id
+            LIMIT 5
+          `);
+          console.log('結合確認:', JSON.stringify(joinResult.rows, null, 2));
+        } else {
+          console.warn('⚠️  データベースに川柳が存在しません');
         }
       } catch (debugError) {
         console.warn('デバッグクエリエラー:', debugError.message);
+        console.warn('エラーのスタック:', debugError.stack);
       }
     }
     
