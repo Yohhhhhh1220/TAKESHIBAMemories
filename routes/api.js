@@ -290,4 +290,33 @@ router.post('/haiku/:id/like', async (req, res) => {
   }
 });
 
+// 川柳の表示順序を更新（管理者用）
+router.post('/haikus/display-order', async (req, res) => {
+  try {
+    const { haikuIds } = req.body;
+    
+    if (!Array.isArray(haikuIds)) {
+      return res.status(400).json({
+        success: false,
+        error: 'haikuIdsは配列である必要があります'
+      });
+    }
+    
+    const { updateHaikuDisplayOrder } = require('../services/postgresService');
+    await updateHaikuDisplayOrder(haikuIds);
+    
+    res.json({
+      success: true,
+      message: '表示順序を更新しました'
+    });
+  } catch (error) {
+    console.error('表示順序更新エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: '表示順序の更新に失敗しました',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 module.exports = router;

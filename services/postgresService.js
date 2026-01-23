@@ -170,10 +170,24 @@ async function initializeDatabase() {
           mood_category VARCHAR(50),
           season_category VARCHAR(50),
           location_category VARCHAR(50),
+          display_order INTEGER DEFAULT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (survey_id) REFERENCES surveys (id) ON DELETE CASCADE
         )
       `);
+      
+      // display_orderカラムを追加（既存のテーブルにカラムが存在する場合）
+      try {
+        await query(`
+          ALTER TABLE haikus 
+          ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT NULL
+        `);
+      } catch (alterError) {
+        // カラムが既に存在する場合は無視
+        if (!alterError.message.includes('already exists') && !alterError.message.includes('duplicate column')) {
+          console.warn('⚠️  display_orderカラム追加時の警告:', alterError.message);
+        }
+      }
       
       // 感情選択統計テーブル
       await query(`
@@ -431,10 +445,13 @@ async function getAllHaikus() {
     
     console.log('最新20件の川柳を取得中...');
     const result = await query(
-      `SELECT DISTINCT h.haiku_text as haiku, s.location_id, s.penname, s.mood, h.created_at, h.id
+      `SELECT DISTINCT h.haiku_text as haiku, s.location_id, s.penname, s.mood, h.created_at, h.id, h.display_order
        FROM haikus h
        JOIN surveys s ON h.survey_id = s.id
-       ORDER BY h.created_at DESC
+       ORDER BY 
+         CASE WHEN h.display_order IS NOT NULL THEN 0 ELSE 1 END,
+         h.display_order ASC NULLS LAST,
+         h.created_at DESC
        LIMIT 20`
     );
     
@@ -805,6 +822,43 @@ async function getLikeCounts(haikuIds, userIp = null, deviceId = null) {
   }
 }
 
+/**
+ * 川柳の表示順序を更新
+ * @param {Array<number>} haikuIds - 川柳IDの配列（順序通り）
+ * @returns {Promise<void>}
+ */
+async function updateHaikuDisplayOrder(haikuIds) {
+  try {
+    // トランザクションで一括更新
+    const client = await getPool().connect();
+    try {
+      await client.query('BEGIN');
+      
+      // 全てのdisplay_orderをNULLにリセット
+      await client.query('UPDATE haikus SET display_order = NULL');
+      
+      // 新しい順序を設定
+      for (let i = 0; i < haikuIds.length; i++) {
+        await client.query(
+          'UPDATE haikus SET display_order = $1 WHERE id = $2',
+          [i + 1, haikuIds[i]]
+        );
+      }
+      
+      await client.query('COMMIT');
+      console.log(`✅ 川柳の表示順序を更新しました: ${haikuIds.length}件`);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('川柳表示順序更新エラー:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   initializeDatabase,
   saveSurvey,
@@ -818,5 +872,6 @@ module.exports = {
   getStatistics,
   toggleLike,
   getLikeCount,
-  getLikeCounts
+  getLikeCounts,
+  updateHaikuDisplayOrder
 };
